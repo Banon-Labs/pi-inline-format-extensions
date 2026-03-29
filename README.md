@@ -86,10 +86,10 @@ The **intel** package should expose meaning-oriented contracts and backend orche
 - `@pi-inline-format/shared-contract`
   - defines the stable detection contract (`InlineFormatPlugin` and `InlineFormatMatch`).
 - `@pi-inline-format/intel`
-  - defines the first semantic/inspection contracts,
+  - defines the semantic/inspection contracts,
   - owns virtual-document and inspection request/result types,
-  - already supports a host-wired scaffold backend for sample inspect/explain flows,
-  - does not yet ship compiler/LSP backends,
+  - now ships a TypeScript language-service backend for JavaScript/TypeScript hover, explain-symbol, and diagnostics flows,
+  - still falls back to a scaffold backend for Python, bash, and unsupported languages,
   - does not own rendering or syntax-highlighting seams.
 - `@pi-inline-format/python`, `@pi-inline-format/javascript`, `@pi-inline-format/typescript`, and `@pi-inline-format/bash`
   - provide heredoc detection only,
@@ -131,7 +131,8 @@ When adding meaning-aware inspection:
 - extend `@pi-inline-format/intel` rather than a language plugin,
 - prefer compiler/LSP-backed backends over custom pseudo-analysis,
 - map backend results back into heredoc regions and virtual documents,
-- keep rendering ownership in host/Pi rather than moving it into intel.
+- keep rendering ownership in host/Pi rather than moving it into intel,
+- treat the current TypeScript language-service backend as the baseline pattern for future language-specific semantic backends.
 
 ## Commands
 

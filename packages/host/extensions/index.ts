@@ -91,9 +91,9 @@ export default function registerInlineFormatHost(pi: ExtensionAPI): void {
       await Promise.resolve();
       ctx.ui.notify(
         [
-          "Intel scaffold is active.",
-          "Scope: virtual documents and inspection request/result plumbing.",
-          "Not yet wired: real compiler/LSP backend.",
+          "Intel layer is active.",
+          "Scope: virtual documents, inspection request/result plumbing, and backend dispatch.",
+          "Real backend: TypeScript language service for javascript/typescript. Fallback scaffold: python/bash and any unsupported language.",
           `Commands: /${INSPECT_SAMPLE_COMMAND} <scenario>, /${EXPLAIN_SYMBOL_COMMAND} <scenario> <symbol>`,
           `Scenarios: ${Object.keys(SAMPLE_COMMANDS).join(", ")}`,
         ].join("\n"),
@@ -104,7 +104,7 @@ export default function registerInlineFormatHost(pi: ExtensionAPI): void {
 
   pi.registerCommand(INSPECT_SAMPLE_COMMAND, {
     description:
-      "Inspect a representative sample heredoc region through the intel scaffold. Usage: /inline-format-inspect-sample <python|javascript|typescript|bash>",
+      "Inspect a representative sample heredoc region through the intel backend. Usage: /inline-format-inspect-sample <python|javascript|typescript|bash>",
     handler: async (args, ctx) => {
       const scenario = parseScenario(args);
       if (scenario === null) {
@@ -135,7 +135,7 @@ export default function registerInlineFormatHost(pi: ExtensionAPI): void {
 
   pi.registerCommand(EXPLAIN_SYMBOL_COMMAND, {
     description:
-      "Explain a symbol in a representative sample heredoc through the intel scaffold. Usage: /inline-format-explain-symbol <scenario> <symbol>",
+      "Explain a symbol in a representative sample heredoc through the intel backend. Usage: /inline-format-explain-symbol <scenario> <symbol>",
     handler: async (args, ctx) => {
       const [rawScenario, ...symbolParts] = args.trim().split(/\s+/u);
       const scenario = rawScenario ? parseScenario(rawScenario) : null;

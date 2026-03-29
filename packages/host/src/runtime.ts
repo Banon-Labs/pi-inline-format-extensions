@@ -17,10 +17,9 @@ import type {
 import { typescriptInlineFormatPlugin } from "@pi-inline-format/typescript";
 import {
   createInlineFormatVirtualDocument,
-  type InlineFormatInspectionBackend,
+  inspectInlineFormatDocument,
   type InlineFormatInspectionKind,
   type InlineFormatInspectionPosition,
-  type InlineFormatInspectionRequest,
   type InlineFormatInspectionResult,
   type InlineFormatRegionReference,
 } from "@pi-inline-format/intel";
@@ -651,111 +650,6 @@ function inferInlineFormatFilePathHint(command: string): string | undefined {
   return undefined;
 }
 
-function findTextualSymbolRanges(
-  source: string,
-  symbolName: string,
-): { startLine: number; startColumn: number; endColumn: number }[] {
-  const ranges: {
-    startLine: number;
-    startColumn: number;
-    endColumn: number;
-  }[] = [];
-  const escaped = symbolName.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
-  const pattern = new RegExp(`\\b${escaped}\\b`, "gu");
-
-  for (const [lineIndex, line] of source.split("\n").entries()) {
-    for (const match of line.matchAll(pattern)) {
-      const startColumn = match.index ?? 0;
-      ranges.push({
-        startLine: lineIndex,
-        startColumn,
-        endColumn: startColumn + symbolName.length,
-      });
-    }
-  }
-
-  return ranges;
-}
-
-const inlineFormatInspectionScaffoldBackend: InlineFormatInspectionBackend = {
-  name: "inline-format-intel-scaffold",
-  languages: defaultInlineFormatPlugins.map((plugin) => plugin.language),
-  async inspect(request: InlineFormatInspectionRequest) {
-    const baseSummary = `Prepared virtual ${request.document.language} document ${request.document.filePath} for ${request.kind} inspection.`;
-
-    if (request.kind === "explain-symbol") {
-      const symbolName = request.symbolName?.trim();
-      if (symbolName === undefined || symbolName.length === 0) {
-        return {
-          backendName: this.name,
-          language: request.document.language,
-          kind: request.kind,
-          summary: `${baseSummary} No symbol name was provided.`,
-        };
-      }
-
-      const textualRanges = findTextualSymbolRanges(
-        request.document.content,
-        symbolName,
-      );
-
-      return {
-        backendName: this.name,
-        language: request.document.language,
-        kind: request.kind,
-        summary:
-          textualRanges.length === 0
-            ? `${baseSummary} Symbol ${symbolName} does not appear textually in the current virtual document.`
-            : `${baseSummary} Symbol ${symbolName} appears ${String(textualRanges.length)} time(s) textually. A real compiler/LSP backend is not wired yet, so this is a scaffolding-level explanation only.`,
-        ranges: textualRanges.map((range) => ({
-          start: {
-            lineIndex: range.startLine,
-            columnIndex: range.startColumn,
-          },
-          end: {
-            lineIndex: range.startLine,
-            columnIndex: range.endColumn,
-          },
-        })),
-        payload: {
-          symbolName,
-          textualOccurrenceCount: textualRanges.length,
-        },
-      };
-    }
-
-    if (request.kind === "diagnostics") {
-      return {
-        backendName: this.name,
-        language: request.document.language,
-        kind: request.kind,
-        summary: `${baseSummary} No compiler/LSP backend is configured yet, so diagnostics are unavailable in the scaffold backend.`,
-        diagnostics: [],
-      };
-    }
-
-    if (request.kind === "semantic-tokens") {
-      return {
-        backendName: this.name,
-        language: request.document.language,
-        kind: request.kind,
-        summary: `${baseSummary} Semantic tokens will require a real backend; this scaffold only proves the request/document plumbing.`,
-      };
-    }
-
-    return {
-      backendName: this.name,
-      language: request.document.language,
-      kind: request.kind,
-      summary: `${baseSummary} No semantic backend is configured yet, but the host can now materialize a virtual document and route an inspection request through the intel contract.`,
-      payload: {
-        filePath: request.document.filePath,
-        sourceLineCount: request.document.content.split("\n").length,
-      },
-    };
-  },
-} as const satisfies InlineFormatInspectionBackend;
-
 export function createInlineFormatRegionReference(
   command: string,
   language?: string,
@@ -798,9 +692,7 @@ export async function inspectInlineFormatCommand(
   }
 
   const document = createInlineFormatVirtualDocument(region);
-  return await inlineFormatInspectionScaffoldBackend.inspect({
-    kind,
-    document,
+  return await inspectInlineFormatDocument(document, kind, {
     ...(options.symbolName !== undefined
       ? { symbolName: options.symbolName }
       : {}),

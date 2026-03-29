@@ -7,6 +7,7 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@pi-inline-format/shared-contract": "*"
+    "@pi-inline-format/shared-contract": "*",
+    "typescript": "^5.9.3"
   }
 }
