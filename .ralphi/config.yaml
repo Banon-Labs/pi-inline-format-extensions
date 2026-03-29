@@ -1,0 +1,27 @@
+# ralphi configuration
+# Auto-generated — edit as needed
+
+project:
+  name: "pi-inline-format-extensions"
+  language: "TypeScript"
+
+commands:
+  lint: "npm run format"
+  typecheck: "npm run typecheck"
+
+rules:
+  - "Use strict TypeScript with NodeNext ES modules."
+  - "Keep Pi runtime seams, built-in tool overrides, deterministic compare helpers, and plugin orchestration in packages/host only."
+  - "Keep language-specific detection and formatting metadata in packages/* plugin packages."
+  - "Put shared interfaces and registration types in packages/shared-contract."
+  - "Export plugin objects and detection helpers from each package's src/index.ts."
+  - "Use host-owned plugin ordering; language packages must not independently override the same Pi built-in tool."
+  - "Run npm run check after code changes and npm run typecheck for quick verification."
+
+boundaries:
+  never_touch:
+    - "*.lock"
+    - ".env*"
+
+engine: "pi"
+max_retries: 3

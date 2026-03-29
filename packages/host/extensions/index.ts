@@ -3,6 +3,10 @@ import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 import {
   defaultInlineFormatPlugins,
   detectInlineFormatMatches,
+  formatInlineFormatMatches,
+  formatInlineFormatPlugins,
+  hostBashOperations,
+  hostBashToolDefinition,
 } from "../src/index.js";
 
 const HOST_STATUS_COMMAND = "inline-format-host-status";
@@ -13,23 +17,26 @@ print("hello")
 PY`;
 
 export default function registerInlineFormatHost(pi: ExtensionAPI): void {
+  pi.registerTool(hostBashToolDefinition);
+
+  pi.on("user_bash", async () => ({
+    operations: hostBashOperations,
+  }));
+
   pi.registerCommand(HOST_STATUS_COMMAND, {
     description: "Show the current host/plugin scaffold status.",
     handler: async (_args, ctx) => {
-      await Promise.resolve();
-      const loadedPlugins = defaultInlineFormatPlugins
-        .map((plugin) => plugin.name)
-        .join(", ");
-      const matches = detectInlineFormatMatches(SAMPLE_COMMAND)
-        .map(
-          (match) =>
-            `${match.pluginName}:${match.language}[${String(match.startLineIndex)}-${String(match.endLineIndex)}]`,
-        )
-        .join(", ");
+      const loadedPlugins = formatInlineFormatPlugins(
+        defaultInlineFormatPlugins,
+      );
+      const matches = formatInlineFormatMatches(
+        detectInlineFormatMatches(SAMPLE_COMMAND),
+      );
 
       ctx.ui.notify(
         [
           "pi-inline-format host scaffold is active.",
+          "Host-owned seams: bash override, deterministic compare helpers, plugin orchestration.",
           `Plugins: ${loadedPlugins}`,
           `Sample detection: ${matches || "none"}`,
         ].join("\n"),

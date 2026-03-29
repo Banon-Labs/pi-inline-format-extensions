@@ -19,3 +19,10 @@ npm run check
 - Do not let multiple language packages independently override the same built-in Pi tool.
 - Put shared interfaces and registration types in `packages/shared-contract`.
 - Use `bd` for all task tracking; do not add markdown TODO lists.
+
+## Ralphi
+
+- Use `.ralphi/config.yaml` as the source of truth for the Ralph loop.
+- Keep host-owned runtime seams, compare helpers, and plugin orchestration in `packages/host` only.
+- Keep language packages pure plugins; shared contracts belong in `packages/shared-contract`.
+- Use `npm run check` for full validation and `npm run typecheck` for quick verification.

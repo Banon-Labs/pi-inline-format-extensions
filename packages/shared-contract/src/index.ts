@@ -10,12 +10,3 @@ export interface InlineFormatPlugin {
   language: string;
   detect(command: string): InlineFormatMatch | null;
 }
-
-export function detectWithPlugins(
-  plugins: readonly InlineFormatPlugin[],
-  command: string,
-): InlineFormatMatch[] {
-  return plugins
-    .map((plugin) => plugin.detect(command))
-    .filter((match): match is InlineFormatMatch => match !== null);
-}
