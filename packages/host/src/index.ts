@@ -5,8 +5,10 @@ export {
   detectInlineFormatMatches,
   formatInlineFormatMatches,
   formatInlineFormatPlugins,
+  getCanonicalPythonHeredocMatches,
   hostBashOperations,
   hostBashToolDefinition,
   sortInlineFormatMatches,
   sortInlineFormatPlugins,
+  validateCanonicalPythonHeredocParity,
 } from "./runtime.js";

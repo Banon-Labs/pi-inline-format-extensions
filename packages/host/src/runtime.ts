@@ -11,6 +11,22 @@ import {
   createLocalBashOperations,
 } from "@mariozechner/pi-coding-agent";
 
+const CANONICAL_PYTHON_HEREDOC_COMMAND = `cat > /tmp/delete.me.py <<'PY'
+#!/usr/bin/env python3
+
+print("hello")
+PY`;
+
+const CANONICAL_PYTHON_HEREDOC_EXPECTED_MATCHES: readonly InlineFormatMatch[] =
+  [
+    {
+      pluginName: "python",
+      language: "python",
+      startLineIndex: 1,
+      endLineIndex: 3,
+    },
+  ];
+
 function compareStrings(left: string, right: string): number {
   if (left < right) {
     return -1;
@@ -89,6 +105,31 @@ export function detectInlineFormatMatches(
   command: string,
 ): InlineFormatMatch[] {
   return detectWithPlugins(defaultInlineFormatPlugins, command);
+}
+
+export function getCanonicalPythonHeredocMatches(): InlineFormatMatch[] {
+  return detectInlineFormatMatches(CANONICAL_PYTHON_HEREDOC_COMMAND);
+}
+
+export function validateCanonicalPythonHeredocParity(): boolean {
+  const actualMatches = sortInlineFormatMatches(
+    getCanonicalPythonHeredocMatches(),
+  );
+  const expectedMatches = sortInlineFormatMatches(
+    CANONICAL_PYTHON_HEREDOC_EXPECTED_MATCHES,
+  );
+
+  if (actualMatches.length !== expectedMatches.length) {
+    return false;
+  }
+
+  return actualMatches.every(
+    (match, index) =>
+      compareInlineFormatMatches(
+        match,
+        expectedMatches[index] as InlineFormatMatch,
+      ) === 0,
+  );
 }
 
 export function formatInlineFormatPlugins(

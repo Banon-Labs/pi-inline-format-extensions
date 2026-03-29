@@ -7,6 +7,7 @@ import {
   formatInlineFormatPlugins,
   hostBashOperations,
   hostBashToolDefinition,
+  validateCanonicalPythonHeredocParity,
 } from "../src/index.js";
 
 const HOST_STATUS_COMMAND = "inline-format-host-status";
@@ -32,11 +33,15 @@ export default function registerInlineFormatHost(pi: ExtensionAPI): void {
       const matches = formatInlineFormatMatches(
         detectInlineFormatMatches(SAMPLE_COMMAND),
       );
+      const parityStatus = validateCanonicalPythonHeredocParity()
+        ? "pass"
+        : "fail";
 
       ctx.ui.notify(
         [
           "pi-inline-format host scaffold is active.",
           "Host-owned seams: bash override, deterministic compare helpers, plugin orchestration.",
+          `Canonical Python heredoc parity: ${parityStatus}`,
           `Plugins: ${loadedPlugins}`,
           `Sample detection: ${matches || "none"}`,
         ].join("\n"),

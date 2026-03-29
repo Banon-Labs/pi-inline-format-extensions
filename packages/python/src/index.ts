@@ -3,10 +3,13 @@ import type {
   InlineFormatPlugin,
 } from "@pi-inline-format/shared-contract";
 
-const PYTHON_HEREDOC_MARKERS = ["<<'PY'", '<<"PY"', "<<PY"];
-const PYTHON_HEREDOC_TERMINATOR = "PY";
+export const PYTHON_HEREDOC_MARKERS = ["<<'PY'", '<<"PY"', "<<PY"] as const;
+export const PYTHON_HEREDOC_TERMINATOR = "PY";
 
-function detectPythonHeredoc(command: string): InlineFormatMatch | null {
+export function findPythonHeredocRange(command: string): {
+  startLineIndex: number;
+  endLineIndex: number;
+} | null {
   const lines = command.split("\n");
   const startLineIndex = lines.findIndex((line) =>
     PYTHON_HEREDOC_MARKERS.some((marker) => line.includes(marker)),
@@ -25,11 +28,60 @@ function detectPythonHeredoc(command: string): InlineFormatMatch | null {
     return null;
   }
 
+  return { startLineIndex, endLineIndex };
+}
+
+export function extractPythonHeredocSource(command: string): string | null {
+  const heredocRange = findPythonHeredocRange(command);
+
+  if (heredocRange === null) {
+    return null;
+  }
+
+  const source = command
+    .split("\n")
+    .slice(heredocRange.startLineIndex + 1, heredocRange.endLineIndex)
+    .join("\n");
+
+  return source.length === 0 ? null : source;
+}
+
+export function describePythonHeredoc(command: string): {
+  startLineIndex: number;
+  endLineIndex: number;
+  source: string;
+} | null {
+  const heredocRange = findPythonHeredocRange(command);
+
+  if (heredocRange === null) {
+    return null;
+  }
+
+  const source = extractPythonHeredocSource(command);
+
+  if (source === null) {
+    return null;
+  }
+
+  return {
+    startLineIndex: heredocRange.startLineIndex,
+    endLineIndex: heredocRange.endLineIndex,
+    source,
+  };
+}
+
+function detectPythonHeredoc(command: string): InlineFormatMatch | null {
+  const heredocRange = findPythonHeredocRange(command);
+
+  if (heredocRange === null) {
+    return null;
+  }
+
   return {
     pluginName: "python",
     language: "python",
-    startLineIndex: startLineIndex + 1,
-    endLineIndex: endLineIndex - 1,
+    startLineIndex: heredocRange.startLineIndex + 1,
+    endLineIndex: heredocRange.endLineIndex - 1,
   };
 }
 
