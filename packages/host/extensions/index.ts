@@ -1,12 +1,13 @@
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 
 import {
+  INLINE_DETERMINISTIC_RUN_COMMAND,
+  INLINE_DETERMINISTIC_STATUS_COMMAND,
   defaultInlineFormatPlugins,
   detectInlineFormatMatches,
   formatInlineFormatMatches,
   formatInlineFormatPlugins,
-  hostBashOperations,
-  hostBashToolDefinition,
+  registerHostRuntimeSeams,
   validateCanonicalPythonHeredocParity,
 } from "../src/index.js";
 
@@ -18,11 +19,7 @@ print("hello")
 PY`;
 
 export default function registerInlineFormatHost(pi: ExtensionAPI): void {
-  pi.registerTool(hostBashToolDefinition);
-
-  pi.on("user_bash", async () => ({
-    operations: hostBashOperations,
-  }));
+  registerHostRuntimeSeams(pi);
 
   pi.registerCommand(HOST_STATUS_COMMAND, {
     description: "Show the current host/plugin scaffold status.",
@@ -40,10 +37,11 @@ export default function registerInlineFormatHost(pi: ExtensionAPI): void {
       ctx.ui.notify(
         [
           "pi-inline-format host scaffold is active.",
-          "Host-owned seams: bash override, deterministic compare helpers, plugin orchestration.",
+          "Host-owned seams: bash override, deterministic compare helpers, summary suppression, plugin orchestration.",
           `Canonical Python heredoc parity: ${parityStatus}`,
           `Plugins: ${loadedPlugins}`,
           `Sample detection: ${matches || "none"}`,
+          `Compare helpers: /${INLINE_DETERMINISTIC_RUN_COMMAND}, /${INLINE_DETERMINISTIC_STATUS_COMMAND}`,
         ].join("\n"),
         "info",
       );
