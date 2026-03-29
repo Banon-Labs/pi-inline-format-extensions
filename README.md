@@ -1,6 +1,6 @@
 # pi-inline-format-extensions
 
-Greenfield workspace for a host-managed inline formatting platform.
+Host/plugin workspace for a package-backed inline formatting platform.
 
 ## Goal
 
@@ -17,10 +17,10 @@ pi-inline-format-extensions/
 ├── packages/
 │   ├── host/             # Pi-facing host/orchestrator package
 │   ├── shared-contract/  # Types and registration contract for plugins
-│   ├── python/           # First real language plugin
-│   ├── typescript/       # Placeholder plugin scaffold
-│   ├── javascript/       # Placeholder plugin scaffold
-│   └── bash/             # Placeholder plugin scaffold
+│   ├── python/           # Python heredoc detector
+│   ├── typescript/       # TypeScript heredoc detector
+│   ├── javascript/       # JavaScript heredoc detector
+│   └── bash/             # Shell/bash heredoc detector
 ├── package.json
 └── tsconfig.json
 ```
@@ -53,18 +53,50 @@ If support expands to more languages, add or adjust plugin detection logic and k
 
 ## Design rule
 
-## Design rule
-
 Only the **host** should own Pi render/tool override seams.
 Language packages should expose reusable plugin objects and detection/render metadata only.
 
-## Current scaffold status
+## Current package status
 
-- `@pi-inline-format/host` loads a default plugin list and exposes `/inline-format-host-status`.
-- `@pi-inline-format/shared-contract` defines the first plugin contract.
-- `@pi-inline-format/python` contains the first real heredoc detector scaffold.
-- `@pi-inline-format/typescript`, `@pi-inline-format/javascript`, and `@pi-inline-format/bash` are placeholders.
-- The repository root now exposes `packages/host/extensions/index.ts` through the root `package.json` `pi.extensions` manifest so a future pinned git install can load the host runtime directly from the repo root.
+- `@pi-inline-format/host`
+  - owns the built-in `bash` override,
+  - owns deterministic compare helpers and summary-suppression seams,
+  - loads the default plugin list,
+  - exposes `/inline-format-host-status`, `/inline-format-use-deterministic-model [scenario]`, `/inline-format-run-deterministic-compare [scenario]`, and `/inline-format-deterministic-status`.
+- `@pi-inline-format/shared-contract`
+  - defines the stable detection contract (`InlineFormatPlugin` and `InlineFormatMatch`).
+- `@pi-inline-format/python`, `@pi-inline-format/javascript`, `@pi-inline-format/typescript`, and `@pi-inline-format/bash`
+  - provide heredoc detection only,
+  - report language plus line boundaries,
+  - do not own any Pi renderer/highlighter seams.
+- The repository root exposes `packages/host/extensions/index.ts` through the root `package.json` `pi.extensions` manifest so both local-path development and pinned git installs can load the same root package surface.
+
+## Install, update, and release expectations
+
+### Preferred package surfaces
+
+- **Stable consumer installs** should use a pinned git source at the repository root, for example:
+  - `git:github.com/Banon-Labs/pi-inline-format-extensions@<commit-or-tag>`
+- **Unpublished local development** should use the repository root path, not `packages/host` directly:
+  - `../../pi-inline-format-extensions`
+
+The root surface is the durable contract. Consumers should not depend on an internal package path when a root-level package source is available.
+
+### Release order
+
+1. Land and validate host/plugin changes in this repo first.
+2. Push the updated commit or publish a stable ref/tag here.
+3. Repin the consumer repo (`pi-inline-format`) to that published git ref.
+4. Rerun consumer validation there (`pi list`, `npm run check`, and any scenario-specific proof flows required by the change).
+
+### Growth rule for new language support
+
+When adding support for another heredoc language:
+
+- extend detection in a plugin package,
+- keep the host as the only owner of Pi runtime/render seams,
+- keep syntax highlighting routed through Pi's shipped `highlightCode(...)` path,
+- add deterministic and proof coverage before asking consumers to repin.
 
 ## Commands
 
