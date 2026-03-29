@@ -1,0 +1,28 @@
+{
+  "name": "@pi-inline-format/host",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "keywords": [
+    "pi-package",
+    "pi-extension"
+  ],
+  "pi": {
+    "extensions": [
+      "./extensions/index.ts"
+    ]
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@pi-inline-format/bash": "*",
+    "@pi-inline-format/javascript": "*",
+    "@pi-inline-format/python": "*",
+    "@pi-inline-format/shared-contract": "*",
+    "@pi-inline-format/typescript": "*"
+  },
+  "peerDependencies": {
+    "@mariozechner/pi-coding-agent": "*"
+  }
+}
