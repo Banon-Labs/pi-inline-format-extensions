@@ -7,10 +7,7 @@ import {
   type SimpleStreamOptions,
   type ToolCall,
 } from "@mariozechner/pi-ai";
-import {
-  describePythonHeredoc,
-  pythonInlineFormatPlugin,
-} from "@pi-inline-format/python";
+import { pythonInlineFormatPlugin } from "@pi-inline-format/python";
 import { bashInlineFormatPlugin } from "@pi-inline-format/bash";
 import { javascriptInlineFormatPlugin } from "@pi-inline-format/javascript";
 import type {
@@ -44,7 +41,6 @@ const CANONICAL_PYTHON_HEREDOC_EXPECTED_MATCHES: readonly InlineFormatMatch[] =
       endLineIndex: 3,
     },
   ];
-const CANONICAL_INLINE_PATH = "/tmp/delete.me.py";
 const BASH_PARAMS = Type.Object({
   command: Type.String({ description: "Bash command to execute" }),
   timeout: Type.Optional(
@@ -313,25 +309,47 @@ function renderInlineHighlightedBashCall(
   timeout: number | undefined,
   theme: Pick<Theme, "fg" | "bold">,
 ): string | null {
-  if (!command.includes(CANONICAL_INLINE_PATH)) {
+  const matches = detectInlineFormatMatches(command);
+  if (matches.length === 0) {
     return null;
   }
 
-  const heredoc = describePythonHeredoc(command);
-  if (heredoc === null) {
-    return null;
-  }
-
-  const highlightedLines = highlightCodeWithRenderTheme(
-    heredoc.source,
-    "python",
-  );
   const lines = command.split("\n");
+  const highlightedByLine = new Map<number, string>();
+
+  for (const match of matches) {
+    const sourceLines = lines.slice(
+      match.startLineIndex,
+      match.endLineIndex + 1,
+    );
+
+    if (sourceLines.length === 0) {
+      continue;
+    }
+
+    const highlightedLines = highlightCodeWithRenderTheme(
+      sourceLines.join("\n"),
+      match.language,
+    );
+
+    sourceLines.forEach((line, index) => {
+      highlightedByLine.set(
+        match.startLineIndex + index,
+        highlightedLines[index] ?? line,
+      );
+    });
+  }
+
+  if (highlightedByLine.size === 0) {
+    return null;
+  }
+
   const renderedLines = lines.map((line, index) => {
     const prefixedLine = `${index === 0 ? "$ " : ""}${line}`;
+    const highlightedLine = highlightedByLine.get(index);
 
-    if (index > heredoc.startLineIndex && index < heredoc.endLineIndex) {
-      return `${index === 0 ? "$ " : ""}${highlightedLines[index - heredoc.startLineIndex - 1] ?? line}`;
+    if (highlightedLine !== undefined) {
+      return `${index === 0 ? "$ " : ""}${highlightedLine}`;
     }
 
     return theme.fg("toolTitle", theme.bold(prefixedLine));

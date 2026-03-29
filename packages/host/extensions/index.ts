@@ -12,11 +12,23 @@ import {
 } from "../src/index.js";
 
 const HOST_STATUS_COMMAND = "inline-format-host-status";
-const SAMPLE_COMMAND = `cat > /tmp/delete.me.py <<'PY'
+const SAMPLE_COMMANDS = {
+  python: `cat > /tmp/delete.me.py <<'PY'
 #!/usr/bin/env python3
 
 print("hello")
-PY`;
+PY`,
+  javascript: `node <<'JS'
+console.log("hello from js")
+JS`,
+  typescript: `cat > /tmp/delete.me.ts <<'TS'
+const answer: number = 42;
+console.log(answer);
+TS`,
+  bash: `bash <<'SH'
+echo "hello from sh"
+SH`,
+} as const;
 
 export default function registerInlineFormatHost(pi: ExtensionAPI): void {
   registerHostRuntimeSeams(pi);
@@ -27,8 +39,9 @@ export default function registerInlineFormatHost(pi: ExtensionAPI): void {
       const loadedPlugins = formatInlineFormatPlugins(
         defaultInlineFormatPlugins,
       );
-      const matches = formatInlineFormatMatches(
-        detectInlineFormatMatches(SAMPLE_COMMAND),
+      const representativeDetections = Object.entries(SAMPLE_COMMANDS).map(
+        ([label, command]) =>
+          `${label}=${formatInlineFormatMatches(detectInlineFormatMatches(command)) || "none"}`,
       );
       const parityStatus = validateCanonicalPythonHeredocParity()
         ? "pass"
@@ -40,7 +53,7 @@ export default function registerInlineFormatHost(pi: ExtensionAPI): void {
           "Host-owned seams: bash override, deterministic compare helpers, summary suppression, plugin orchestration.",
           `Canonical Python heredoc parity: ${parityStatus}`,
           `Plugins: ${loadedPlugins}`,
-          `Sample detection: ${matches || "none"}`,
+          `Representative detections: ${representativeDetections.join(", ")}`,
           `Compare helpers: /${INLINE_DETERMINISTIC_RUN_COMMAND}, /${INLINE_DETERMINISTIC_STATUS_COMMAND}`,
         ].join("\n"),
         "info",
