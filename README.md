@@ -25,6 +25,34 @@ pi-inline-format-extensions/
 └── tsconfig.json
 ```
 
+## Highlighting ownership contract
+
+The workspace intentionally does **not** roll its own syntax highlighter.
+
+Ownership is split this way:
+
+- **plugins** decide whether a bash/heredoc shape matches and report language plus line boundaries,
+- **shared-contract** only exposes the detection contract (`InlineFormatPlugin.detect(...)` → `InlineFormatMatch`),
+- **host** owns the Pi-facing render seam and calls Pi's shipped highlighting path,
+- **Pi** remains the actual source of syntax highlighting/color output.
+
+Current evidence in code:
+
+- `packages/host/src/runtime.ts` imports `highlightCode` from `@mariozechner/pi-coding-agent` and uses it via `highlightCodeWithRenderTheme(...)` inside the host-owned bash `renderCall(...)` path.
+- `packages/python/src/index.ts` only finds heredoc ranges, extracts source text, and returns `InlineFormatMatch` metadata.
+- `packages/shared-contract/src/index.ts` only defines `InlineFormatPlugin` and `InlineFormatMatch`; it does not expose any renderer/highlighter API.
+
+This boundary is intentional and should remain stable:
+
+- no custom tokenization engine,
+- no plugin-owned ANSI coloring,
+- no language-pack-specific renderer that bypasses Pi,
+- no duplicate highlighting stack layered alongside Pi's shipped one.
+
+If support expands to more languages, add or adjust plugin detection logic and keep highlighting routed through the host/Pi-owned path rather than inventing a language-specific highlighter.
+
+## Design rule
+
 ## Design rule
 
 Only the **host** should own Pi render/tool override seams.
