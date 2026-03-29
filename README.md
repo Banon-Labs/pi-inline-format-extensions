@@ -82,12 +82,13 @@ The **intel** package should expose meaning-oriented contracts and backend orche
   - owns the built-in `bash` override,
   - owns deterministic compare helpers and summary-suppression seams,
   - loads the default plugin list,
-  - exposes `/inline-format-host-status`, `/inline-format-use-deterministic-model [scenario]`, `/inline-format-run-deterministic-compare [scenario]`, and `/inline-format-deterministic-status`.
+  - exposes `/inline-format-host-status`, `/inline-format-use-deterministic-model [scenario]`, `/inline-format-run-deterministic-compare [scenario]`, `/inline-format-deterministic-status`, `/inline-format-intel-status`, `/inline-format-inspect-sample <scenario>`, and `/inline-format-explain-symbol <scenario> <symbol>`.
 - `@pi-inline-format/shared-contract`
   - defines the stable detection contract (`InlineFormatPlugin` and `InlineFormatMatch`).
 - `@pi-inline-format/intel`
   - defines the first semantic/inspection contracts,
   - owns virtual-document and inspection request/result types,
+  - already supports a host-wired scaffold backend for sample inspect/explain flows,
   - does not yet ship compiler/LSP backends,
   - does not own rendering or syntax-highlighting seams.
 - `@pi-inline-format/python`, `@pi-inline-format/javascript`, `@pi-inline-format/typescript`, and `@pi-inline-format/bash`

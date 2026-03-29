@@ -16,6 +16,15 @@ import type {
 } from "@pi-inline-format/shared-contract";
 import { typescriptInlineFormatPlugin } from "@pi-inline-format/typescript";
 import {
+  createInlineFormatVirtualDocument,
+  type InlineFormatInspectionBackend,
+  type InlineFormatInspectionKind,
+  type InlineFormatInspectionPosition,
+  type InlineFormatInspectionRequest,
+  type InlineFormatInspectionResult,
+  type InlineFormatRegionReference,
+} from "@pi-inline-format/intel";
+import {
   createBashToolDefinition,
   createLocalBashOperations,
   highlightCode,
@@ -609,6 +618,229 @@ export function formatInlineFormatMatches(
         `${match.pluginName}:${match.language}[${String(match.startLineIndex)}-${String(match.endLineIndex)}]`,
     )
     .join(", ");
+}
+
+export function findInlineFormatMatch(
+  command: string,
+  language?: string,
+): InlineFormatMatch | undefined {
+  const matches = detectInlineFormatMatches(command);
+  if (language === undefined) {
+    return matches[0];
+  }
+
+  return matches.find((match) => match.language === language);
+}
+
+function extractInlineFormatSource(
+  command: string,
+  match: InlineFormatMatch,
+): string {
+  return command
+    .split("\n")
+    .slice(match.startLineIndex, match.endLineIndex + 1)
+    .join("\n");
+}
+
+function inferInlineFormatFilePathHint(command: string): string | undefined {
+  const fileWriteMatch = /cat\s*>\s*(?<path>\S+)\s*<</u.exec(command);
+  if (fileWriteMatch?.groups?.path !== undefined) {
+    return fileWriteMatch.groups.path;
+  }
+
+  return undefined;
+}
+
+function findTextualSymbolRanges(
+  source: string,
+  symbolName: string,
+): { startLine: number; startColumn: number; endColumn: number }[] {
+  const ranges: {
+    startLine: number;
+    startColumn: number;
+    endColumn: number;
+  }[] = [];
+  const escaped = symbolName.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+  const pattern = new RegExp(`\\b${escaped}\\b`, "gu");
+
+  for (const [lineIndex, line] of source.split("\n").entries()) {
+    for (const match of line.matchAll(pattern)) {
+      const startColumn = match.index ?? 0;
+      ranges.push({
+        startLine: lineIndex,
+        startColumn,
+        endColumn: startColumn + symbolName.length,
+      });
+    }
+  }
+
+  return ranges;
+}
+
+const inlineFormatInspectionScaffoldBackend: InlineFormatInspectionBackend = {
+  name: "inline-format-intel-scaffold",
+  languages: defaultInlineFormatPlugins.map((plugin) => plugin.language),
+  async inspect(request: InlineFormatInspectionRequest) {
+    const baseSummary = `Prepared virtual ${request.document.language} document ${request.document.filePath} for ${request.kind} inspection.`;
+
+    if (request.kind === "explain-symbol") {
+      const symbolName = request.symbolName?.trim();
+      if (symbolName === undefined || symbolName.length === 0) {
+        return {
+          backendName: this.name,
+          language: request.document.language,
+          kind: request.kind,
+          summary: `${baseSummary} No symbol name was provided.`,
+        };
+      }
+
+      const textualRanges = findTextualSymbolRanges(
+        request.document.content,
+        symbolName,
+      );
+
+      return {
+        backendName: this.name,
+        language: request.document.language,
+        kind: request.kind,
+        summary:
+          textualRanges.length === 0
+            ? `${baseSummary} Symbol ${symbolName} does not appear textually in the current virtual document.`
+            : `${baseSummary} Symbol ${symbolName} appears ${String(textualRanges.length)} time(s) textually. A real compiler/LSP backend is not wired yet, so this is a scaffolding-level explanation only.`,
+        ranges: textualRanges.map((range) => ({
+          start: {
+            lineIndex: range.startLine,
+            columnIndex: range.startColumn,
+          },
+          end: {
+            lineIndex: range.startLine,
+            columnIndex: range.endColumn,
+          },
+        })),
+        payload: {
+          symbolName,
+          textualOccurrenceCount: textualRanges.length,
+        },
+      };
+    }
+
+    if (request.kind === "diagnostics") {
+      return {
+        backendName: this.name,
+        language: request.document.language,
+        kind: request.kind,
+        summary: `${baseSummary} No compiler/LSP backend is configured yet, so diagnostics are unavailable in the scaffold backend.`,
+        diagnostics: [],
+      };
+    }
+
+    if (request.kind === "semantic-tokens") {
+      return {
+        backendName: this.name,
+        language: request.document.language,
+        kind: request.kind,
+        summary: `${baseSummary} Semantic tokens will require a real backend; this scaffold only proves the request/document plumbing.`,
+      };
+    }
+
+    return {
+      backendName: this.name,
+      language: request.document.language,
+      kind: request.kind,
+      summary: `${baseSummary} No semantic backend is configured yet, but the host can now materialize a virtual document and route an inspection request through the intel contract.`,
+      payload: {
+        filePath: request.document.filePath,
+        sourceLineCount: request.document.content.split("\n").length,
+      },
+    };
+  },
+} as const satisfies InlineFormatInspectionBackend;
+
+export function createInlineFormatRegionReference(
+  command: string,
+  language?: string,
+  projectRoot: string = process.cwd(),
+): InlineFormatRegionReference | null {
+  const match = findInlineFormatMatch(command, language);
+  if (match === undefined) {
+    return null;
+  }
+
+  const filePathHint = inferInlineFormatFilePathHint(command);
+
+  return {
+    language: match.language,
+    match,
+    command,
+    source: extractInlineFormatSource(command, match),
+    ...(filePathHint !== undefined ? { filePathHint } : {}),
+    projectRoot,
+  };
+}
+
+export async function inspectInlineFormatCommand(
+  command: string,
+  kind: InlineFormatInspectionKind,
+  options: {
+    language?: string;
+    symbolName?: string;
+    position?: InlineFormatInspectionPosition;
+    projectRoot?: string;
+  } = {},
+): Promise<InlineFormatInspectionResult | null> {
+  const region = createInlineFormatRegionReference(
+    command,
+    options.language,
+    options.projectRoot,
+  );
+  if (region === null) {
+    return null;
+  }
+
+  const document = createInlineFormatVirtualDocument(region);
+  return await inlineFormatInspectionScaffoldBackend.inspect({
+    kind,
+    document,
+    ...(options.symbolName !== undefined
+      ? { symbolName: options.symbolName }
+      : {}),
+    ...(options.position !== undefined ? { position: options.position } : {}),
+  });
+}
+
+export function formatInlineFormatInspectionResult(
+  result: InlineFormatInspectionResult,
+): string {
+  const lines = [
+    `Backend: ${result.backendName}`,
+    `Language: ${result.language}`,
+    `Kind: ${result.kind}`,
+    `Summary: ${result.summary}`,
+  ];
+
+  if (result.ranges !== undefined && result.ranges.length > 0) {
+    lines.push(
+      `Ranges: ${result.ranges
+        .map(
+          (range: {
+            start: InlineFormatInspectionPosition;
+            end: InlineFormatInspectionPosition;
+          }) =>
+            `[${String(range.start.lineIndex)}:${String(range.start.columnIndex)}-${String(range.end.lineIndex)}:${String(range.end.columnIndex)}]`,
+        )
+        .join(", ")}`,
+    );
+  }
+
+  if (result.diagnostics !== undefined) {
+    lines.push(`Diagnostics: ${String(result.diagnostics.length)}`);
+  }
+
+  if (result.payload !== undefined) {
+    lines.push(`Payload: ${JSON.stringify(result.payload)}`);
+  }
+
+  return lines.join("\n");
 }
 
 export function createHostBashRuntime(cwd: string = process.cwd()): {

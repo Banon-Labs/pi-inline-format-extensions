@@ -19,6 +19,7 @@
     "@pi-inline-format/bash": "*",
     "@pi-inline-format/javascript": "*",
     "@pi-inline-format/python": "*",
+    "@pi-inline-format/intel": "*",
     "@pi-inline-format/shared-contract": "*",
     "@pi-inline-format/typescript": "*"
   },
