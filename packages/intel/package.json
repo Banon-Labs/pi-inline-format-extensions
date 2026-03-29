@@ -1,0 +1,12 @@
+{
+  "name": "@pi-inline-format/intel",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@pi-inline-format/shared-contract": "*"
+  }
+}

@@ -17,6 +17,7 @@ pi-inline-format-extensions/
 ├── packages/
 │   ├── host/             # Pi-facing host/orchestrator package
 │   ├── shared-contract/  # Types and registration contract for plugins
+│   ├── intel/            # Semantic inspection / meaning-aware companion layer
 │   ├── python/           # Python heredoc detector
 │   ├── typescript/       # TypeScript heredoc detector
 │   ├── javascript/       # JavaScript heredoc detector
@@ -51,10 +52,29 @@ This boundary is intentional and should remain stable:
 
 If support expands to more languages, add or adjust plugin detection logic and keep highlighting routed through the host/Pi-owned path rather than inventing a language-specific highlighter.
 
+## Semantic/intel ownership contract
+
+The new semantic/intel layer is **not** a language plugin and **not** a renderer owner.
+
+Its role is to make future meaning-aware inspection possible without breaking the current host/plugin split:
+
+- **intel** owns virtual-document and inspection contracts,
+- **intel** may later orchestrate compiler/LSP backends,
+- **host** may call into intel for inspect/explain workflows,
+- **language plugins** stay focused on heredoc detection and language metadata,
+- **host/Pi** remain responsible for visual rendering and syntax-highlighting output.
+
+This keeps the architecture additive:
+
+- plugins detect,
+- host renders,
+- intel explains meaning.
+
 ## Design rule
 
 Only the **host** should own Pi render/tool override seams.
 Language packages should expose reusable plugin objects and detection/render metadata only.
+The **intel** package should expose meaning-oriented contracts and backend orchestration only.
 
 ## Current package status
 
@@ -65,6 +85,11 @@ Language packages should expose reusable plugin objects and detection/render met
   - exposes `/inline-format-host-status`, `/inline-format-use-deterministic-model [scenario]`, `/inline-format-run-deterministic-compare [scenario]`, and `/inline-format-deterministic-status`.
 - `@pi-inline-format/shared-contract`
   - defines the stable detection contract (`InlineFormatPlugin` and `InlineFormatMatch`).
+- `@pi-inline-format/intel`
+  - defines the first semantic/inspection contracts,
+  - owns virtual-document and inspection request/result types,
+  - does not yet ship compiler/LSP backends,
+  - does not own rendering or syntax-highlighting seams.
 - `@pi-inline-format/python`, `@pi-inline-format/javascript`, `@pi-inline-format/typescript`, and `@pi-inline-format/bash`
   - provide heredoc detection only,
   - report language plus line boundaries,
@@ -97,6 +122,15 @@ When adding support for another heredoc language:
 - keep the host as the only owner of Pi runtime/render seams,
 - keep syntax highlighting routed through Pi's shipped `highlightCode(...)` path,
 - add deterministic and proof coverage before asking consumers to repin.
+
+### Growth rule for semantic inspection
+
+When adding meaning-aware inspection:
+
+- extend `@pi-inline-format/intel` rather than a language plugin,
+- prefer compiler/LSP-backed backends over custom pseudo-analysis,
+- map backend results back into heredoc regions and virtual documents,
+- keep rendering ownership in host/Pi rather than moving it into intel.
 
 ## Commands
 
