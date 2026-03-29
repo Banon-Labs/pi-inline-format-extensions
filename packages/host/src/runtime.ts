@@ -81,9 +81,25 @@ For the canonical heredoc flow in this repo, the preferred behavior is:
 - do not add any assistant text before or after a successful bash tool result`;
 
 const INLINE_DETERMINISTIC_API = "inline-deterministic-api";
-const INLINE_DETERMINISTIC_TOOL_CALL_ID =
-  "call_inline_format_deterministic_bash";
-const INLINE_DETERMINISTIC_BASH_COMMAND = `cat > /tmp/delete.me.py <<'PY'
+type DeterministicScenarioKey = "python" | "javascript" | "typescript" | "bash";
+
+type DeterministicScenario = {
+  key: DeterministicScenarioKey;
+  label: string;
+  model: string;
+  prompt: string;
+  toolCallId: string;
+  bashCommand: string;
+};
+
+const INLINE_DETERMINISTIC_SCENARIOS = [
+  {
+    key: "python",
+    label: "Python",
+    model: INLINE_DETERMINISTIC_MODEL,
+    prompt: INLINE_DETERMINISTIC_PROMPT,
+    toolCallId: "call_inline_format_deterministic_python_bash",
+    bashCommand: `cat > /tmp/delete.me.py <<'PY'
 #!/usr/bin/env python3
 
 def main() -> None:
@@ -91,9 +107,54 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-PY`;
-const INLINE_DETERMINISTIC_MISS_MESSAGE =
-  "This deterministic compare model only supports the canonical heredoc flow. Use /inline-format-run-deterministic-compare.";
+PY`,
+  },
+  {
+    key: "javascript",
+    label: "JavaScript",
+    model: "javascript-heredoc-compare",
+    prompt:
+      "Use bash to run javascript from a heredoc with node. Keep the transcript inline and normal.",
+    toolCallId: "call_inline_format_deterministic_javascript_bash",
+    bashCommand: `node <<'JS'
+const value = 42;
+console.log("hello from js", value);
+JS`,
+  },
+  {
+    key: "typescript",
+    label: "TypeScript",
+    model: "typescript-heredoc-compare",
+    prompt:
+      "Use bash to write typescript to a file using heredocs. Execute into /tmp/delete.me.ts",
+    toolCallId: "call_inline_format_deterministic_typescript_bash",
+    bashCommand: `cat > /tmp/delete.me.ts <<'TS'
+type Answer = {
+  value: number;
+};
+
+const answer: Answer = { value: 42 };
+console.log(answer.value);
+TS`,
+  },
+  {
+    key: "bash",
+    label: "Bash",
+    model: "bash-heredoc-compare",
+    prompt:
+      "Use bash to run shell from a heredoc with bash. Keep the transcript inline and normal.",
+    toolCallId: "call_inline_format_deterministic_bash_bash",
+    bashCommand: `bash <<'SH'
+set -euo pipefail
+echo "hello from sh"
+SH`,
+  },
+] as const satisfies readonly DeterministicScenario[];
+
+const INLINE_DETERMINISTIC_DEFAULT_SCENARIO = INLINE_DETERMINISTIC_SCENARIOS[0];
+const INLINE_DETERMINISTIC_SCENARIO_KEYS = INLINE_DETERMINISTIC_SCENARIOS.map(
+  (scenario) => scenario.key,
+).join(", ");
 
 function compareStrings(left: string, right: string): number {
   if (left < right) {
@@ -159,6 +220,51 @@ function getLatestUserText(context: Context): string | undefined {
     .map((content) => content.text)
     .join("\n")
     .trim();
+}
+
+function getDeterministicScenarioByModel(
+  modelId: string,
+): DeterministicScenario | undefined {
+  return INLINE_DETERMINISTIC_SCENARIOS.find(
+    (scenario) => scenario.model === modelId,
+  );
+}
+
+function getDeterministicScenarioByKey(
+  key: string,
+): DeterministicScenario | undefined {
+  return INLINE_DETERMINISTIC_SCENARIOS.find(
+    (scenario) => scenario.key === key,
+  );
+}
+
+function parseDeterministicScenarioArg(
+  args: string,
+): DeterministicScenario | undefined {
+  const normalized = args.trim().toLowerCase();
+  if (normalized.length === 0) {
+    return INLINE_DETERMINISTIC_DEFAULT_SCENARIO;
+  }
+
+  return getDeterministicScenarioByKey(normalized);
+}
+
+function formatDeterministicScenarioUsage(): string {
+  return `Usage: /${INLINE_DETERMINISTIC_RUN_COMMAND} [${INLINE_DETERMINISTIC_SCENARIO_KEYS}]`;
+}
+
+function formatDeterministicModelUsage(): string {
+  return `Usage: /${INLINE_DETERMINISTIC_USE_COMMAND} [${INLINE_DETERMINISTIC_SCENARIO_KEYS}]`;
+}
+
+function createDeterministicMissMessage(
+  scenario: DeterministicScenario,
+): string {
+  return [
+    `This deterministic compare model only supports the ${scenario.label.toLowerCase()} heredoc flow.`,
+    `Expected prompt: ${scenario.prompt}`,
+    `Run /${INLINE_DETERMINISTIC_RUN_COMMAND} ${scenario.key} or switch with /${INLINE_DETERMINISTIC_USE_COMMAND} ${scenario.key}.`,
+  ].join(" ");
 }
 
 function hasSuccessfulToolResult(
@@ -250,29 +356,37 @@ function streamDeterministicInlineCompare(
         return;
       }
 
-      if (
-        hasSuccessfulToolResult(
-          context,
-          "bash",
-          INLINE_DETERMINISTIC_TOOL_CALL_ID,
-        )
-      ) {
+      const scenario = getDeterministicScenarioByModel(model.id);
+      if (scenario === undefined) {
+        pushTextResponse(
+          stream,
+          output,
+          `Unknown deterministic scenario for model ${model.id}.`,
+        );
+        return;
+      }
+
+      if (hasSuccessfulToolResult(context, "bash", scenario.toolCallId)) {
         stream.push({ type: "done", reason: "stop", message: output });
         stream.end();
         return;
       }
 
-      if (getLatestUserText(context) !== INLINE_DETERMINISTIC_PROMPT) {
-        pushTextResponse(stream, output, INLINE_DETERMINISTIC_MISS_MESSAGE);
+      if (getLatestUserText(context) !== scenario.prompt) {
+        pushTextResponse(
+          stream,
+          output,
+          createDeterministicMissMessage(scenario),
+        );
         return;
       }
 
       pushToolCallResponse(stream, output, {
         type: "toolCall",
-        id: INLINE_DETERMINISTIC_TOOL_CALL_ID,
+        id: scenario.toolCallId,
         name: "bash",
         arguments: {
-          command: INLINE_DETERMINISTIC_BASH_COMMAND,
+          command: scenario.bashCommand,
         },
       });
     } catch (error) {
@@ -365,32 +479,34 @@ function renderInlineHighlightedBashCall(
 async function useDeterministicModel(
   pi: ExtensionAPI,
   ctx: ExtensionCommandContext,
-): Promise<void> {
+  scenario: DeterministicScenario = INLINE_DETERMINISTIC_DEFAULT_SCENARIO,
+): Promise<boolean> {
   const model = ctx.modelRegistry.find(
     INLINE_DETERMINISTIC_PROVIDER,
-    INLINE_DETERMINISTIC_MODEL,
+    scenario.model,
   );
   if (model === undefined) {
     ctx.ui.notify(
-      `Model ${INLINE_DETERMINISTIC_PROVIDER}/${INLINE_DETERMINISTIC_MODEL} is not registered. Try /reload.`,
+      `Model ${INLINE_DETERMINISTIC_PROVIDER}/${scenario.model} is not registered. Try /reload.`,
       "error",
     );
-    return;
+    return false;
   }
 
   const success = await pi.setModel(model);
   if (!success) {
     ctx.ui.notify(
-      `Could not activate ${INLINE_DETERMINISTIC_PROVIDER}/${INLINE_DETERMINISTIC_MODEL}.`,
+      `Could not activate ${INLINE_DETERMINISTIC_PROVIDER}/${scenario.model}.`,
       "error",
     );
-    return;
+    return false;
   }
 
   ctx.ui.notify(
-    `Using ${INLINE_DETERMINISTIC_PROVIDER}/${INLINE_DETERMINISTIC_MODEL} for deterministic compare output.`,
+    `Using ${INLINE_DETERMINISTIC_PROVIDER}/${scenario.model} for ${scenario.label.toLowerCase()} deterministic compare output.`,
     "info",
   );
+  return true;
 }
 
 export const defaultInlineFormatPlugins = [
@@ -550,31 +666,41 @@ export function registerDeterministicProvider(pi: ExtensionAPI): void {
     baseUrl: "https://inline-deterministic.invalid",
     apiKey: "inline-deterministic-local-only",
     api: INLINE_DETERMINISTIC_API,
-    models: [
-      {
-        id: INLINE_DETERMINISTIC_MODEL,
-        name: "Canonical Heredoc Compare",
-        reasoning: false,
-        input: ["text"],
-        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-        contextWindow: 32000,
-        maxTokens: 4096,
-      },
-    ],
+    models: INLINE_DETERMINISTIC_SCENARIOS.map((scenario) => ({
+      id: scenario.model,
+      name: `${scenario.label} Heredoc Compare`,
+      reasoning: false,
+      input: ["text"],
+      cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+      contextWindow: 32000,
+      maxTokens: 4096,
+    })),
     streamSimple: streamDeterministicInlineCompare,
   });
 
   pi.registerCommand(INLINE_DETERMINISTIC_USE_COMMAND, {
-    description: `Switch the current session to ${INLINE_DETERMINISTIC_PROVIDER}/${INLINE_DETERMINISTIC_MODEL}.`,
-    handler: async (_args, ctx) => {
-      await useDeterministicModel(pi, ctx);
+    description: `Switch the current session to ${INLINE_DETERMINISTIC_PROVIDER}/<scenario-model>. Optional args: ${INLINE_DETERMINISTIC_SCENARIO_KEYS}.`,
+    handler: async (args, ctx) => {
+      const scenario = parseDeterministicScenarioArg(args);
+      if (scenario === undefined) {
+        ctx.ui.notify(formatDeterministicModelUsage(), "warning");
+        return;
+      }
+
+      await useDeterministicModel(pi, ctx, scenario);
     },
   });
 
   pi.registerCommand(INLINE_DETERMINISTIC_RUN_COMMAND, {
     description:
-      "Switch to the local deterministic compare model and send the canonical heredoc prompt with no real LLM call.",
-    handler: async (_args, ctx) => {
+      "Switch to the local deterministic compare model for the requested scenario and send the matching heredoc prompt with no real LLM call.",
+    handler: async (args, ctx) => {
+      const scenario = parseDeterministicScenarioArg(args);
+      if (scenario === undefined) {
+        ctx.ui.notify(formatDeterministicScenarioUsage(), "warning");
+        return;
+      }
+
       if (!ctx.isIdle()) {
         ctx.ui.notify(
           "Agent is busy. Wait for it to finish before starting the deterministic compare.",
@@ -583,22 +709,27 @@ export function registerDeterministicProvider(pi: ExtensionAPI): void {
         return;
       }
 
-      await useDeterministicModel(pi, ctx);
-      pi.sendUserMessage(INLINE_DETERMINISTIC_PROMPT);
+      const activated = await useDeterministicModel(pi, ctx, scenario);
+      if (!activated) {
+        return;
+      }
+
+      pi.sendUserMessage(scenario.prompt);
     },
   });
 
   pi.registerCommand(INLINE_DETERMINISTIC_STATUS_COMMAND, {
     description:
-      "Show the local deterministic compare provider, model, and helper commands.",
+      "Show the local deterministic compare provider, scenarios, models, and helper commands.",
     handler: async (_args, ctx) => {
       await Promise.resolve();
       ctx.ui.notify(
         [
           `Provider: ${INLINE_DETERMINISTIC_PROVIDER}`,
-          `Model: ${INLINE_DETERMINISTIC_MODEL}`,
-          `Prompt: ${INLINE_DETERMINISTIC_PROMPT}`,
-          `Commands: /${INLINE_DETERMINISTIC_USE_COMMAND}, /${INLINE_DETERMINISTIC_RUN_COMMAND}`,
+          `Default model: ${INLINE_DETERMINISTIC_MODEL}`,
+          `Scenarios: ${INLINE_DETERMINISTIC_SCENARIOS.map((scenario) => `${scenario.key}=${scenario.model}`).join(", ")}`,
+          `Default prompt: ${INLINE_DETERMINISTIC_PROMPT}`,
+          `Commands: /${INLINE_DETERMINISTIC_USE_COMMAND} [scenario], /${INLINE_DETERMINISTIC_RUN_COMMAND} [scenario]`,
         ].join("\n"),
         "info",
       );
