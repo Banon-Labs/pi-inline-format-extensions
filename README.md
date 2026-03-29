@@ -36,6 +36,7 @@ Language packages should expose reusable plugin objects and detection/render met
 - `@pi-inline-format/shared-contract` defines the first plugin contract.
 - `@pi-inline-format/python` contains the first real heredoc detector scaffold.
 - `@pi-inline-format/typescript`, `@pi-inline-format/javascript`, and `@pi-inline-format/bash` are placeholders.
+- The repository root now exposes `packages/host/extensions/index.ts` through the root `package.json` `pi.extensions` manifest so a future pinned git install can load the host runtime directly from the repo root.
 
 ## Commands
 

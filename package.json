@@ -3,9 +3,18 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "keywords": [
+    "pi-package",
+    "pi-extension"
+  ],
   "workspaces": [
     "packages/*"
   ],
+  "pi": {
+    "extensions": [
+      "./packages/host/extensions/index.ts"
+    ]
+  },
   "scripts": {
     "check": "npm run format && npm run typecheck",
     "format": "prettier --check .",
