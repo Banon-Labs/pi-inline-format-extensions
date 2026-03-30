@@ -127,6 +127,45 @@ function findFirstIdentifierPosition(
   return null;
 }
 
+function findIdentifierRangeAtPosition(
+  source: string,
+  position: InlineFormatInspectionPosition,
+): InlineFormatInspectionRange | undefined {
+  const line = source.split("\n")[position.lineIndex];
+  if (line === undefined) {
+    return undefined;
+  }
+
+  const identifierPattern = /[A-Za-z_][A-Za-z0-9_]*/gu;
+  for (const match of line.matchAll(identifierPattern)) {
+    const startColumn = match.index;
+    if (startColumn === undefined) {
+      continue;
+    }
+
+    const endColumn = startColumn + match[0].length;
+    if (
+      position.columnIndex < startColumn ||
+      position.columnIndex >= endColumn
+    ) {
+      continue;
+    }
+
+    return {
+      start: {
+        lineIndex: position.lineIndex,
+        columnIndex: startColumn,
+      },
+      end: {
+        lineIndex: position.lineIndex,
+        columnIndex: endColumn,
+      },
+    };
+  }
+
+  return undefined;
+}
+
 function resolvePythonInspectionPosition(
   request: InlineFormatInspectionRequest,
 ): InlineFormatInspectionPosition | null {
@@ -671,6 +710,12 @@ export const basedPyrightInspectionBackend: InlineFormatInspectionBackend = {
         hoverResult?.range !== undefined
           ? fromLspRange(hoverResult.range)
           : undefined;
+      const fallbackHoverRange =
+        hoverRange ??
+        findIdentifierRangeAtPosition(
+          request.document.content,
+          resolvedPosition,
+        );
 
       if (request.kind === "explain-symbol") {
         const textualRanges =
@@ -687,8 +732,8 @@ export const basedPyrightInspectionBackend: InlineFormatInspectionBackend = {
               : `Explained symbol ${symbolName} via basedpyright. ${hoverText ?? "Hover text was empty."}`,
           ...(textualRanges.length > 0
             ? { ranges: textualRanges }
-            : hoverRange !== undefined
-              ? { ranges: [hoverRange] }
+            : fallbackHoverRange !== undefined
+              ? { ranges: [fallbackHoverRange] }
               : {}),
           payload: {
             ...(symbolName !== undefined && symbolName.length > 0
@@ -703,9 +748,17 @@ export const basedPyrightInspectionBackend: InlineFormatInspectionBackend = {
         backendName: this.name,
         language: request.document.language,
         kind: request.kind,
-        summary: createHoverSummary(hoverText),
-        ...(hoverRange !== undefined ? { ranges: [hoverRange] } : {}),
+        summary:
+          symbolName === undefined || symbolName.length === 0
+            ? createHoverSummary(hoverText)
+            : `Inspected symbol ${symbolName} via basedpyright. ${hoverText ?? "Hover text was empty."}`,
+        ...(fallbackHoverRange !== undefined
+          ? { ranges: [fallbackHoverRange] }
+          : {}),
         payload: {
+          ...(symbolName !== undefined && symbolName.length > 0
+            ? { symbolName }
+            : {}),
           hover: hoverText,
         },
       };

@@ -52,6 +52,11 @@ SH`,
 } as const;
 
 type SampleScenario = keyof typeof SAMPLE_COMMANDS;
+
+const REPRESENTATIVE_HOVER_SYMBOLS: Partial<Record<SampleScenario, string>> = {
+  python: "main",
+  bash: "greet",
+};
 type SymbolInspectionKind =
   | "explain-symbol"
   | "definition"
@@ -93,10 +98,16 @@ async function notifyHoverInspection(
   },
   scenario: SampleScenario,
 ): Promise<void> {
+  const representativeSymbol = REPRESENTATIVE_HOVER_SYMBOLS[scenario];
   const result = await inspectInlineFormatCommand(
     SAMPLE_COMMANDS[scenario],
     "hover",
-    { language: scenario },
+    {
+      language: scenario,
+      ...(representativeSymbol !== undefined
+        ? { symbolName: representativeSymbol }
+        : {}),
+    },
   );
 
   if (result === null) {
