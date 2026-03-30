@@ -99,6 +99,41 @@ The **intel** package should expose meaning-oriented contracts and backend orche
   - do not own any Pi renderer/highlighter seams.
 - The repository root exposes `packages/host/extensions/index.ts` through the root `package.json` `pi.extensions` manifest so both local-path development and pinned git installs can load the same root package surface.
 
+## Shipped today
+
+This repo is the source of truth for the package-backed capabilities shipped by `Banon-Labs/pi-inline-format-extensions`.
+
+| Language     | Detects this heredoc? | Basic highlighting | Inspection backend                                 | Smarter highlighting in the normal tool row | Status                               |
+| ------------ | --------------------- | ------------------ | -------------------------------------------------- | ------------------------------------------- | ------------------------------------ |
+| Python       | ✅                    | ✅                 | ✅ `basedpyright` prototype                        | ❌                                          | supported, prototype inspection path |
+| JavaScript   | ✅                    | ✅                 | ✅ TypeScript language service                     | ✅                                          | shipped                              |
+| TypeScript   | ✅                    | ✅                 | ✅ TypeScript language service                     | ✅                                          | shipped                              |
+| Bash / shell | ✅                    | ✅                 | ⚠️ partial (`bash-language-server` + `shellcheck`) | ❌                                          | supported, prototype inspection path |
+
+## Researched next candidates
+
+These are languages we researched as plausible next steps, but they are **not wired into the package yet**.
+
+| Language                      | Built in today? | Likely easy win     | Harder follow-up           | Notes                                                                                         |
+| ----------------------------- | --------------- | ------------------- | -------------------------- | --------------------------------------------------------------------------------------------- |
+| Ruby                          | ❌              | syntax highlighting | smarter highlighting later | Strong candidate. Ruby LSP looks more promising than Solargraph for deeper language features. |
+| PHP                           | ❌              | syntax highlighting | smarter highlighting later | Good candidate. Intelephense makes later deeper support plausible.                            |
+| Lua                           | ❌              | syntax highlighting | smarter highlighting later | Good candidate. LuaLS has real semantic-token work, but we have not wired it here.            |
+| SQL                           | ❌              | syntax highlighting | maybe later                | Straightforward syntax candidate. The deeper language story is less settled.                  |
+| Perl                          | ❌              | syntax highlighting | maybe later                | Plausible syntax candidate. Deeper language support looks weaker than Ruby/PHP/Lua.           |
+| YAML / JSON / TOML / Markdown | ❌              | syntax highlighting | probably not worth it      | Good candidates if we want more file/config formats without deeper symbol-aware work.         |
+
+## README consolidation plan
+
+To remove duplicated capability tables from `Banon-Labs/pi-inline-format` and keep this repo as the canonical source:
+
+1. Treat this README's `## Shipped today` and `## Researched next candidates` sections as the maintained source of truth.
+2. In `pi-inline-format`, replace the duplicated tables with a short summary plus links back to:
+   - `https://github.com/Banon-Labs/pi-inline-format-extensions#shipped-today`
+   - `https://github.com/Banon-Labs/pi-inline-format-extensions#researched-next-candidates`
+3. If we want true embedding later, do it with a generated sync step that copies these sections during a release/update workflow; GitHub README markdown does not natively support remote includes.
+4. Prefer links over generated duplication unless we decide the extra automation is worth the maintenance cost.
+
 ## Install, update, and release expectations
 
 ### Preferred package surfaces
