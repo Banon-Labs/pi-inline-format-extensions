@@ -17,6 +17,10 @@ const HOST_STATUS_COMMAND = "inline-format-host-status";
 const INTEL_STATUS_COMMAND = "inline-format-intel-status";
 const INSPECT_SAMPLE_COMMAND = "inline-format-inspect-sample";
 const EXPLAIN_SYMBOL_COMMAND = "inline-format-explain-symbol";
+const FIND_DEFINITION_COMMAND = "inline-format-find-definition";
+const HIGHLIGHT_SYMBOL_COMMAND = "inline-format-highlight-symbol";
+const SEMANTIC_TOKENS_COMMAND = "inline-format-semantic-tokens";
+const DIAGNOSTICS_COMMAND = "inline-format-diagnostics-sample";
 const SAMPLE_COMMANDS = {
   python: `cat > /tmp/delete.me.py <<'PY'
 #!/usr/bin/env python3
@@ -38,11 +42,20 @@ console.log(answer.value);
 TS`,
   bash: `bash <<'SH'
 set -euo pipefail
-echo "hello from sh"
+
+greet() {
+  echo "hello from sh"
+}
+
+greet
 SH`,
 } as const;
 
 type SampleScenario = keyof typeof SAMPLE_COMMANDS;
+type SymbolInspectionKind =
+  | "explain-symbol"
+  | "definition"
+  | "document-highlights";
 
 function parseScenario(args: string): SampleScenario | null {
   const normalized = args.trim().toLowerCase();
@@ -51,6 +64,125 @@ function parseScenario(args: string): SampleScenario | null {
   }
 
   return null;
+}
+
+function parseScenarioAndSymbol(args: string): {
+  scenario: SampleScenario | null;
+  symbolName: string;
+} {
+  const [rawScenario, ...symbolParts] = args.trim().split(/\s+/u);
+  return {
+    scenario: rawScenario ? parseScenario(rawScenario) : null,
+    symbolName: symbolParts.join(" ").trim(),
+  };
+}
+
+function formatSymbolUsage(commandName: string): string {
+  return `Usage: /${commandName} <${Object.keys(SAMPLE_COMMANDS).join("|")}> <symbol>`;
+}
+
+function formatScenarioUsage(commandName: string): string {
+  return `Usage: /${commandName} <${Object.keys(SAMPLE_COMMANDS).join("|")}>`;
+}
+
+async function notifyHoverInspection(
+  ctx: {
+    ui: {
+      notify(message: string, level: "warning" | "info" | "error"): void;
+    };
+  },
+  scenario: SampleScenario,
+): Promise<void> {
+  const result = await inspectInlineFormatCommand(
+    SAMPLE_COMMANDS[scenario],
+    "hover",
+    { language: scenario },
+  );
+
+  if (result === null) {
+    ctx.ui.notify(`No inline format match found for ${scenario}.`, "warning");
+    return;
+  }
+
+  ctx.ui.notify(formatInlineFormatInspectionResult(result), "info");
+}
+
+async function notifySymbolInspection(
+  ctx: {
+    ui: {
+      notify(message: string, level: "warning" | "info" | "error"): void;
+    };
+  },
+  kind: SymbolInspectionKind,
+  scenario: SampleScenario,
+  symbolName: string,
+): Promise<void> {
+  const result = await inspectInlineFormatCommand(
+    SAMPLE_COMMANDS[scenario],
+    kind,
+    {
+      language: scenario,
+      symbolName,
+    },
+  );
+
+  if (result === null) {
+    ctx.ui.notify(
+      `No inline format match found for ${scenario}/${symbolName}.`,
+      "warning",
+    );
+    return;
+  }
+
+  ctx.ui.notify(formatInlineFormatInspectionResult(result), "info");
+}
+
+async function notifySemanticTokensInspection(
+  ctx: {
+    ui: {
+      notify(message: string, level: "warning" | "info" | "error"): void;
+    };
+  },
+  scenario: SampleScenario,
+): Promise<void> {
+  const result = await inspectInlineFormatCommand(
+    SAMPLE_COMMANDS[scenario],
+    "semantic-tokens",
+    {
+      language: scenario,
+    },
+  );
+
+  if (result === null) {
+    ctx.ui.notify(`No inline format match found for ${scenario}.`, "warning");
+    return;
+  }
+
+  ctx.ui.notify(formatInlineFormatInspectionResult(result), "info");
+}
+
+async function notifyDiagnosticsInspection(
+  ctx: {
+    ui: {
+      notify(message: string, level: "warning" | "info" | "error"): void;
+    };
+  },
+  scenario: SampleScenario,
+): Promise<void> {
+  const result = await inspectInlineFormatCommand(
+    SAMPLE_COMMANDS[scenario],
+    "diagnostics",
+    {
+      language: scenario,
+    },
+  );
+
+  if (result === null) {
+    ctx.ui.notify(`No inline format match found for ${scenario}.`, "warning");
+    return;
+  }
+
+  ctx.ui.notify(formatInlineFormatInspectionResult(result), "info");
 }
 
 export default function registerInlineFormatHost(pi: ExtensionAPI): void {
@@ -78,7 +210,7 @@ export default function registerInlineFormatHost(pi: ExtensionAPI): void {
           `Plugins: ${loadedPlugins}`,
           `Representative detections: ${representativeDetections.join(", ")}`,
           `Compare helpers: /${INLINE_DETERMINISTIC_RUN_COMMAND}, /${INLINE_DETERMINISTIC_STATUS_COMMAND}`,
-          `Intel helpers: /${INTEL_STATUS_COMMAND}, /${INSPECT_SAMPLE_COMMAND} <scenario>, /${EXPLAIN_SYMBOL_COMMAND} <scenario> <symbol>`,
+          `Intel helpers: /${INTEL_STATUS_COMMAND}, /${INSPECT_SAMPLE_COMMAND} <scenario>, /${EXPLAIN_SYMBOL_COMMAND} <scenario> <symbol>, /${FIND_DEFINITION_COMMAND} <scenario> <symbol>, /${HIGHLIGHT_SYMBOL_COMMAND} <scenario> <symbol>, /${SEMANTIC_TOKENS_COMMAND} <scenario>, /${DIAGNOSTICS_COMMAND} <scenario>`,
         ].join("\n"),
         "info",
       );
@@ -93,8 +225,8 @@ export default function registerInlineFormatHost(pi: ExtensionAPI): void {
         [
           "Intel layer is active.",
           "Scope: virtual documents, inspection request/result plumbing, and backend dispatch.",
-          "Real backend: TypeScript language service for javascript/typescript. Fallback scaffold: python/bash and any unsupported language.",
-          `Commands: /${INSPECT_SAMPLE_COMMAND} <scenario>, /${EXPLAIN_SYMBOL_COMMAND} <scenario> <symbol>`,
+          "Real backends: TypeScript language service for javascript/typescript, basedpyright prototype for python, and a bash-language-server plus ShellCheck prototype for bash. The TS path supports hover, explain-symbol, definitions, document highlights, diagnostics, and semantic-token payloads. Python currently supports diagnostics, hover, explain-symbol, and definitions. Bash currently supports diagnostics, hover-like explain, definitions, and document highlights through the prototype path.",
+          `Commands: /${INSPECT_SAMPLE_COMMAND} <scenario>, /${EXPLAIN_SYMBOL_COMMAND} <scenario> <symbol>, /${FIND_DEFINITION_COMMAND} <scenario> <symbol>, /${HIGHLIGHT_SYMBOL_COMMAND} <scenario> <symbol>, /${SEMANTIC_TOKENS_COMMAND} <scenario>, /${DIAGNOSTICS_COMMAND} <scenario>`,
           `Scenarios: ${Object.keys(SAMPLE_COMMANDS).join(", ")}`,
         ].join("\n"),
         "info",
@@ -108,28 +240,11 @@ export default function registerInlineFormatHost(pi: ExtensionAPI): void {
     handler: async (args, ctx) => {
       const scenario = parseScenario(args);
       if (scenario === null) {
-        ctx.ui.notify(
-          `Usage: /${INSPECT_SAMPLE_COMMAND} <${Object.keys(SAMPLE_COMMANDS).join("|")}>`,
-          "warning",
-        );
+        ctx.ui.notify(formatScenarioUsage(INSPECT_SAMPLE_COMMAND), "warning");
         return;
       }
 
-      const result = await inspectInlineFormatCommand(
-        SAMPLE_COMMANDS[scenario],
-        "hover",
-        { language: scenario },
-      );
-
-      if (result === null) {
-        ctx.ui.notify(
-          `No inline format match found for ${scenario}.`,
-          "warning",
-        );
-        return;
-      }
-
-      ctx.ui.notify(formatInlineFormatInspectionResult(result), "info");
+      await notifyHoverInspection(ctx, scenario);
     },
   });
 
@@ -137,36 +252,74 @@ export default function registerInlineFormatHost(pi: ExtensionAPI): void {
     description:
       "Explain a symbol in a representative sample heredoc through the intel backend. Usage: /inline-format-explain-symbol <scenario> <symbol>",
     handler: async (args, ctx) => {
-      const [rawScenario, ...symbolParts] = args.trim().split(/\s+/u);
-      const scenario = rawScenario ? parseScenario(rawScenario) : null;
-      const symbolName = symbolParts.join(" ").trim();
-
+      const { scenario, symbolName } = parseScenarioAndSymbol(args);
       if (scenario === null || symbolName.length === 0) {
-        ctx.ui.notify(
-          `Usage: /${EXPLAIN_SYMBOL_COMMAND} <${Object.keys(SAMPLE_COMMANDS).join("|")}> <symbol>`,
-          "warning",
-        );
+        ctx.ui.notify(formatSymbolUsage(EXPLAIN_SYMBOL_COMMAND), "warning");
         return;
       }
 
-      const result = await inspectInlineFormatCommand(
-        SAMPLE_COMMANDS[scenario],
-        "explain-symbol",
-        {
-          language: scenario,
-          symbolName,
-        },
+      await notifySymbolInspection(ctx, "explain-symbol", scenario, symbolName);
+    },
+  });
+
+  pi.registerCommand(FIND_DEFINITION_COMMAND, {
+    description:
+      "Resolve a symbol definition in a representative sample heredoc. Usage: /inline-format-find-definition <scenario> <symbol>",
+    handler: async (args, ctx) => {
+      const { scenario, symbolName } = parseScenarioAndSymbol(args);
+      if (scenario === null || symbolName.length === 0) {
+        ctx.ui.notify(formatSymbolUsage(FIND_DEFINITION_COMMAND), "warning");
+        return;
+      }
+
+      await notifySymbolInspection(ctx, "definition", scenario, symbolName);
+    },
+  });
+
+  pi.registerCommand(HIGHLIGHT_SYMBOL_COMMAND, {
+    description:
+      "Show document-highlight ranges for a symbol in a representative sample heredoc. Usage: /inline-format-highlight-symbol <scenario> <symbol>",
+    handler: async (args, ctx) => {
+      const { scenario, symbolName } = parseScenarioAndSymbol(args);
+      if (scenario === null || symbolName.length === 0) {
+        ctx.ui.notify(formatSymbolUsage(HIGHLIGHT_SYMBOL_COMMAND), "warning");
+        return;
+      }
+
+      await notifySymbolInspection(
+        ctx,
+        "document-highlights",
+        scenario,
+        symbolName,
       );
+    },
+  });
 
-      if (result === null) {
-        ctx.ui.notify(
-          `No inline format match found for ${scenario}/${symbolName}.`,
-          "warning",
-        );
+  pi.registerCommand(SEMANTIC_TOKENS_COMMAND, {
+    description:
+      "Expose semantic-token payloads for a representative sample heredoc. Usage: /inline-format-semantic-tokens <scenario>",
+    handler: async (args, ctx) => {
+      const scenario = parseScenario(args);
+      if (scenario === null) {
+        ctx.ui.notify(formatScenarioUsage(SEMANTIC_TOKENS_COMMAND), "warning");
         return;
       }
 
-      ctx.ui.notify(formatInlineFormatInspectionResult(result), "info");
+      await notifySemanticTokensInspection(ctx, scenario);
+    },
+  });
+
+  pi.registerCommand(DIAGNOSTICS_COMMAND, {
+    description:
+      "Show diagnostics for a representative sample heredoc through the intel backend. Usage: /inline-format-diagnostics-sample <scenario>",
+    handler: async (args, ctx) => {
+      const scenario = parseScenario(args);
+      if (scenario === null) {
+        ctx.ui.notify(formatScenarioUsage(DIAGNOSTICS_COMMAND), "warning");
+        return;
+      }
+
+      await notifyDiagnosticsInspection(ctx, scenario);
     },
   });
 }

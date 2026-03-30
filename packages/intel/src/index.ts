@@ -1,10 +1,15 @@
 import ts from "typescript";
 
+import { bashLanguageServerInspectionBackend } from "./bash-language-server.js";
+import { basedPyrightInspectionBackend } from "./basedpyright.js";
+
 import type { InlineFormatMatch } from "@pi-inline-format/shared-contract";
 
 export type InlineFormatInspectionKind =
   | "hover"
   | "explain-symbol"
+  | "definition"
+  | "document-highlights"
   | "diagnostics"
   | "semantic-tokens";
 
@@ -410,6 +415,113 @@ function createHoverSummary(quickInfoText: string | null): string {
   return "Resolved hover request via the TypeScript language service, but quick info text was empty.";
 }
 
+function createDefinitionSummary(
+  symbolName: string | undefined,
+  definitionCount: number,
+  sameFileDefinitionCount: number,
+): string {
+  const label = symbolName ?? "the selected symbol";
+  if (definitionCount === 0) {
+    return `TypeScript language service could not resolve a definition for ${label}.`;
+  }
+
+  if (sameFileDefinitionCount === definitionCount) {
+    return `Resolved ${String(definitionCount)} definition(s) for ${label} via the TypeScript language service.`;
+  }
+
+  return `Resolved ${String(definitionCount)} definition(s) for ${label} via the TypeScript language service; ${String(sameFileDefinitionCount)} map directly into the current virtual document.`;
+}
+
+function createDocumentHighlightsSummary(highlightCount: number): string {
+  return highlightCount === 0
+    ? "TypeScript language service reported no document highlights for the selected symbol."
+    : `TypeScript language service reported ${String(highlightCount)} document highlight(s) for the selected symbol.`;
+}
+
+const TYPE_SCRIPT_SEMANTIC_TOKEN_TYPE_NAMES = [
+  "class",
+  "enum",
+  "interface",
+  "namespace",
+  "typeParameter",
+  "type",
+  "parameter",
+  "variable",
+  "enumMember",
+  "property",
+  "function",
+  "member",
+] as const;
+const TYPE_SCRIPT_SEMANTIC_TOKEN_MODIFIER_NAMES = [
+  "declaration",
+  "static",
+  "async",
+  "readonly",
+  "defaultLibrary",
+  "local",
+] as const;
+const TYPE_SCRIPT_SEMANTIC_TOKEN_TYPE_OFFSET = 8;
+const TYPE_SCRIPT_SEMANTIC_TOKEN_MODIFIER_MASK = 0xff;
+
+function decodeTypeScriptSemanticTokenType(
+  encodedClassification: number,
+): string {
+  const tokenTypeIndex =
+    (encodedClassification >> TYPE_SCRIPT_SEMANTIC_TOKEN_TYPE_OFFSET) - 1;
+  return (
+    TYPE_SCRIPT_SEMANTIC_TOKEN_TYPE_NAMES[tokenTypeIndex] ??
+    `unknown(${String(tokenTypeIndex)})`
+  );
+}
+
+function decodeTypeScriptSemanticTokenModifiers(
+  encodedClassification: number,
+): string[] {
+  const modifierMask =
+    encodedClassification & TYPE_SCRIPT_SEMANTIC_TOKEN_MODIFIER_MASK;
+
+  return TYPE_SCRIPT_SEMANTIC_TOKEN_MODIFIER_NAMES.flatMap(
+    (modifierName, index) =>
+      (modifierMask & (1 << index)) !== 0 ? [modifierName] : [],
+  );
+}
+
+function mapEncodedTypeScriptSemanticTokens(
+  sourceFile: ts.SourceFile,
+  classifications: ts.Classifications,
+): Array<{
+  range: InlineFormatInspectionRange;
+  tokenType: string;
+  modifiers: string[];
+}> {
+  const result: Array<{
+    range: InlineFormatInspectionRange;
+    tokenType: string;
+    modifiers: string[];
+  }> = [];
+  const dense = classifications.spans;
+
+  for (let index = 0; index < dense.length; index += 3) {
+    const start = dense[index] ?? 0;
+    const length = dense[index + 1] ?? 0;
+    const encodedClassification = dense[index + 2] ?? 0;
+
+    result.push({
+      range: createRangeFromTextSpan(sourceFile, { start, length }),
+      tokenType: decodeTypeScriptSemanticTokenType(encodedClassification),
+      modifiers: decodeTypeScriptSemanticTokenModifiers(encodedClassification),
+    });
+  }
+
+  return result;
+}
+
+function createSemanticTokensSummary(tokenCount: number): string {
+  return tokenCount === 0
+    ? "TypeScript language service reported no semantic tokens for the current virtual document."
+    : `TypeScript language service reported ${String(tokenCount)} semantic token(s) for the current virtual document.`;
+}
+
 function collectDiagnostics(
   session: TypeScriptInspectionSession,
 ): readonly ts.Diagnostic[] {
@@ -521,6 +633,64 @@ export const inlineFormatInspectionScaffoldBackend: InlineFormatInspectionBacken
         };
       }
 
+      if (request.kind === "definition") {
+        const symbolName = request.symbolName?.trim();
+        const textualRanges =
+          symbolName === undefined || symbolName.length === 0
+            ? []
+            : findTextualSymbolRanges(request.document.content, symbolName);
+
+        return {
+          backendName: this.name,
+          language: request.document.language,
+          kind: request.kind,
+          summary: createScaffoldSummary(
+            request,
+            symbolName === undefined || symbolName.length === 0
+              ? "Definition lookup needs a symbol name or position, but no real backend is configured for this language yet."
+              : `Definition lookup for ${symbolName} remains scaffold-only for this language. Textual occurrences: ${String(textualRanges.length)}.`,
+          ),
+          ...(textualRanges.length > 0 ? { ranges: textualRanges } : {}),
+          ...(symbolName !== undefined && symbolName.length > 0
+            ? {
+                payload: {
+                  symbolName,
+                  textualOccurrenceCount: textualRanges.length,
+                },
+              }
+            : {}),
+        };
+      }
+
+      if (request.kind === "document-highlights") {
+        const symbolName = request.symbolName?.trim();
+        const textualRanges =
+          symbolName === undefined || symbolName.length === 0
+            ? []
+            : findTextualSymbolRanges(request.document.content, symbolName);
+
+        return {
+          backendName: this.name,
+          language: request.document.language,
+          kind: request.kind,
+          summary: createScaffoldSummary(
+            request,
+            symbolName === undefined || symbolName.length === 0
+              ? "Document highlights need a symbol name or position, but no real backend is configured for this language yet."
+              : `Document highlights for ${symbolName} remain scaffold-only for this language. Textual occurrences: ${String(textualRanges.length)}.`,
+          ),
+          ...(textualRanges.length > 0 ? { ranges: textualRanges } : {}),
+          ...(symbolName !== undefined && symbolName.length > 0
+            ? {
+                payload: {
+                  symbolName,
+                  highlightCount: textualRanges.length,
+                },
+              }
+            : {}),
+        };
+      }
+
       if (request.kind === "semantic-tokens") {
         return {
           backendName: this.name,
@@ -582,12 +752,30 @@ export const typescriptLanguageServiceInspectionBackend: InlineFormatInspectionB
         }
 
         if (request.kind === "semantic-tokens") {
+          const semanticTokens = mapEncodedTypeScriptSemanticTokens(
+            session.sourceFile,
+            session.languageService.getEncodedSemanticClassifications(
+              session.fileName,
+              {
+                start: 0,
+                length: session.sourceFile.end,
+              },
+              ts.SemanticClassificationFormat.TwentyTwenty,
+            ),
+          );
+
           return {
             backendName: this.name,
             language: request.document.language,
             kind: request.kind,
-            summary:
-              "Semantic token rendering is not exposed yet, but the TypeScript language service backend is active for hover/explain/diagnostics.",
+            summary: createSemanticTokensSummary(semanticTokens.length),
+            ...(semanticTokens.length > 0
+              ? { ranges: semanticTokens.map((token) => token.range) }
+              : {}),
+            payload: {
+              tokenCount: semanticTokens.length,
+              tokens: semanticTokens,
+            },
           };
         }
 
@@ -613,6 +801,91 @@ export const typescriptLanguageServiceInspectionBackend: InlineFormatInspectionB
           quickInfo !== undefined
             ? createRangeFromTextSpan(session.sourceFile, quickInfo.textSpan)
             : undefined;
+
+        if (request.kind === "definition") {
+          const symbolName = request.symbolName?.trim();
+          const definitionInfo =
+            session.languageService.getDefinitionAndBoundSpan(
+              session.fileName,
+              targetOffset,
+            );
+          const definitions = definitionInfo?.definitions ?? [];
+          const boundRange =
+            definitionInfo !== undefined
+              ? createRangeFromTextSpan(
+                  session.sourceFile,
+                  definitionInfo.textSpan,
+                )
+              : undefined;
+          const sameFileDefinitionRanges = definitions
+            .filter((definition) => definition.fileName === session.fileName)
+            .map((definition) =>
+              createRangeFromTextSpan(session.sourceFile, definition.textSpan),
+            );
+
+          return {
+            backendName: this.name,
+            language: request.document.language,
+            kind: request.kind,
+            summary: createDefinitionSummary(
+              symbolName,
+              definitions.length,
+              sameFileDefinitionRanges.length,
+            ),
+            ...(sameFileDefinitionRanges.length > 0
+              ? { ranges: sameFileDefinitionRanges }
+              : {}),
+            payload: {
+              ...(symbolName !== undefined && symbolName.length > 0
+                ? { symbolName }
+                : {}),
+              definitionCount: definitions.length,
+              sameFileDefinitionCount: sameFileDefinitionRanges.length,
+              ...(boundRange !== undefined ? { boundSpan: boundRange } : {}),
+              definitionFiles: [
+                ...new Set(
+                  definitions.map((definition) => definition.fileName),
+                ),
+              ],
+              quickInfo: quickInfoText,
+            },
+          };
+        }
+
+        if (request.kind === "document-highlights") {
+          const symbolName = request.symbolName?.trim();
+          const highlights =
+            session.languageService.getDocumentHighlights(
+              session.fileName,
+              targetOffset,
+              [session.fileName],
+            ) ?? [];
+          const ranges = highlights.flatMap((documentHighlight) =>
+            documentHighlight.fileName === session.fileName
+              ? documentHighlight.highlightSpans.map((highlightSpan) =>
+                  createRangeFromTextSpan(
+                    session.sourceFile,
+                    highlightSpan.textSpan,
+                  ),
+                )
+              : [],
+          );
+
+          return {
+            backendName: this.name,
+            language: request.document.language,
+            kind: request.kind,
+            summary: createDocumentHighlightsSummary(ranges.length),
+            ...(ranges.length > 0 ? { ranges } : {}),
+            payload: {
+              ...(symbolName !== undefined && symbolName.length > 0
+                ? { symbolName }
+                : {}),
+              highlightCount: ranges.length,
+              quickInfo: quickInfoText,
+            },
+          };
+        }
 
         if (request.kind === "explain-symbol") {
           const symbolName = request.symbolName?.trim();
@@ -679,6 +952,8 @@ export const typescriptLanguageServiceInspectionBackend: InlineFormatInspectionB
 export const defaultInlineFormatInspectionBackends: readonly InlineFormatInspectionBackend[] =
   [
     typescriptLanguageServiceInspectionBackend,
+    basedPyrightInspectionBackend,
+    bashLanguageServerInspectionBackend,
     inlineFormatInspectionScaffoldBackend,
   ];
 

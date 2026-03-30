@@ -82,14 +82,16 @@ The **intel** package should expose meaning-oriented contracts and backend orche
   - owns the built-in `bash` override,
   - owns deterministic compare helpers and summary-suppression seams,
   - loads the default plugin list,
-  - exposes `/inline-format-host-status`, `/inline-format-use-deterministic-model [scenario]`, `/inline-format-run-deterministic-compare [scenario]`, `/inline-format-deterministic-status`, `/inline-format-intel-status`, `/inline-format-inspect-sample <scenario>`, and `/inline-format-explain-symbol <scenario> <symbol>`.
+  - exposes `/inline-format-host-status`, `/inline-format-use-deterministic-model [scenario]`, `/inline-format-run-deterministic-compare [scenario]`, `/inline-format-deterministic-status`, `/inline-format-intel-status`, `/inline-format-inspect-sample <scenario>`, `/inline-format-explain-symbol <scenario> <symbol>`, `/inline-format-find-definition <scenario> <symbol>`, `/inline-format-highlight-symbol <scenario> <symbol>`, `/inline-format-semantic-tokens <scenario>`, and `/inline-format-diagnostics-sample <scenario>`.
 - `@pi-inline-format/shared-contract`
   - defines the stable detection contract (`InlineFormatPlugin` and `InlineFormatMatch`).
 - `@pi-inline-format/intel`
   - defines the semantic/inspection contracts,
   - owns virtual-document and inspection request/result types,
-  - now ships a TypeScript language-service backend for JavaScript/TypeScript hover, explain-symbol, and diagnostics flows,
-  - still falls back to a scaffold backend for Python, bash, and unsupported languages,
+  - now ships a TypeScript language-service backend for JavaScript/TypeScript hover, explain-symbol, definition, document-highlight, diagnostics, and semantic-token payload flows,
+  - now ships a basedpyright prototype backend for Python diagnostics, hover/explain-symbol, and definition flows,
+  - now ships a bash-language-server plus ShellCheck prototype backend for Bash diagnostics, hover-like explain, definition, and document-highlight flows,
+  - still falls back to a scaffold backend for unsupported languages and any inspection kinds not yet implemented by a real backend,
   - does not own rendering or syntax-highlighting seams.
 - `@pi-inline-format/python`, `@pi-inline-format/javascript`, `@pi-inline-format/typescript`, and `@pi-inline-format/bash`
   - provide heredoc detection only,
