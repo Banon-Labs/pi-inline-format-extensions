@@ -11,6 +11,7 @@ import type {
   InlineFormatInspectionRange,
   InlineFormatInspectionRequest,
   InlineFormatInspectionResult,
+  InlineFormatSemanticToken,
 } from "./index.js";
 
 type JsonRpcResponse = {
@@ -58,6 +59,23 @@ type LspLocationLink = {
   targetUri: string;
   targetRange: LspRange;
   targetSelectionRange: LspRange;
+};
+
+type LspSemanticTokensLegend = {
+  tokenTypes?: string[];
+  tokenModifiers?: string[];
+};
+
+type LspSemanticTokens = {
+  data?: number[];
+};
+
+type LspInitializeResult = {
+  capabilities?: {
+    semanticTokensProvider?: {
+      legend?: LspSemanticTokensLegend;
+    };
+  };
 };
 
 type NotificationWaiter = {
@@ -290,6 +308,148 @@ function normalizeLocations(result: unknown): LspLocation[] {
   });
 }
 
+function normalizeSemanticTokensLegend(
+  result: unknown,
+): LspSemanticTokensLegend | null {
+  if (
+    typeof result !== "object" ||
+    result === null ||
+    !("capabilities" in result)
+  ) {
+    return null;
+  }
+
+  const capabilities = result.capabilities;
+  if (
+    typeof capabilities !== "object" ||
+    capabilities === null ||
+    !("semanticTokensProvider" in capabilities)
+  ) {
+    return null;
+  }
+
+  const semanticTokensProvider = capabilities.semanticTokensProvider;
+  if (
+    typeof semanticTokensProvider !== "object" ||
+    semanticTokensProvider === null ||
+    !("legend" in semanticTokensProvider)
+  ) {
+    return null;
+  }
+
+  const legend = semanticTokensProvider.legend;
+  const legendRecord = legend as {
+    tokenTypes?: unknown;
+    tokenModifiers?: unknown;
+  };
+
+  const tokenTypes =
+    Array.isArray(legendRecord.tokenTypes) &&
+    legendRecord.tokenTypes.every(
+      (entry): entry is string => typeof entry === "string",
+    )
+      ? legendRecord.tokenTypes
+      : undefined;
+  const tokenModifiers =
+    Array.isArray(legendRecord.tokenModifiers) &&
+    legendRecord.tokenModifiers.every(
+      (entry): entry is string => typeof entry === "string",
+    )
+      ? legendRecord.tokenModifiers
+      : undefined;
+  if (tokenTypes === undefined && tokenModifiers === undefined) {
+    return null;
+  }
+
+  return {
+    ...(tokenTypes !== undefined ? { tokenTypes } : {}),
+    ...(tokenModifiers !== undefined ? { tokenModifiers } : {}),
+  };
+}
+
+function getDocumentLine(
+  source: string,
+  lineIndex: number,
+): string | undefined {
+  return source.split("\n")[lineIndex];
+}
+
+function decodeSemanticTokenModifiers(
+  encodedModifiers: number,
+  legend: LspSemanticTokensLegend,
+): string[] {
+  const modifiers = legend.tokenModifiers ?? [];
+  return modifiers.filter(
+    (_, index) => (encodedModifiers & (1 << index)) !== 0,
+  );
+}
+
+function mapSemanticTokens(
+  source: string,
+  encoded: LspSemanticTokens | null,
+  legend: LspSemanticTokensLegend | null,
+): {
+  legend: LspSemanticTokensLegend | null;
+  tokens: InlineFormatSemanticToken[];
+} {
+  const tokenTypes = legend?.tokenTypes ?? [];
+  const data = encoded?.data ?? [];
+  const tokens = [] as {
+    range: InlineFormatInspectionRange;
+    tokenType: string;
+    modifiers: string[];
+    text?: string;
+  }[];
+  let line = 0;
+  let column = 0;
+
+  for (let index = 0; index < data.length; index += 5) {
+    const deltaLine = data[index] ?? 0;
+    const deltaStart = data[index + 1] ?? 0;
+    const length = data[index + 2] ?? 0;
+    const tokenTypeIndex = data[index + 3] ?? 0;
+    const modifierBits = data[index + 4] ?? 0;
+
+    line += deltaLine;
+    column = deltaLine === 0 ? column + deltaStart : deltaStart;
+
+    if (length <= 0) {
+      continue;
+    }
+
+    const lineText = getDocumentLine(source, line);
+    if (lineText === undefined) {
+      continue;
+    }
+
+    const endColumn = Math.min(column + length, lineText.length);
+    if (endColumn <= column) {
+      continue;
+    }
+
+    const tokenType =
+      tokenTypes[tokenTypeIndex] ?? `token-${String(tokenTypeIndex)}`;
+    const text = lineText.slice(column, endColumn).trim();
+
+    tokens.push({
+      range: {
+        start: {
+          lineIndex: line,
+          columnIndex: column,
+        },
+        end: {
+          lineIndex: line,
+          columnIndex: endColumn,
+        },
+      },
+      tokenType,
+      modifiers: decodeSemanticTokenModifiers(modifierBits, legend ?? {}),
+      ...(text.length > 0 ? { text } : {}),
+    });
+  }
+
+  return { legend, tokens };
+}
 class JsonRpcStdioClient {
   private readonly process = spawn("basedpyright-langserver", ["--stdio"], {
     stdio: ["pipe", "pipe", "pipe"],
@@ -490,6 +650,7 @@ async function withBasedPyrightSession<T>(
     filePath: string;
     fileUri: string;
     initialDiagnostics: readonly LspDiagnostic[];
+    semanticTokensLegend: LspSemanticTokensLegend | null;
   }) => Promise<T>,
 ): Promise<T> {
   const tempDir = mkdtempSync(
@@ -505,7 +666,7 @@ async function withBasedPyrightSession<T>(
   const client = new JsonRpcStdioClient();
 
   try {
-    await client.request("initialize", {
+    const initializeResult = (await client.request("initialize", {
       processId: process.pid,
       clientInfo: {
         name: "pi-inline-format-intel",
@@ -522,7 +683,7 @@ async function withBasedPyrightSession<T>(
           name: path.basename(request.document.region.projectRoot ?? tempDir),
         },
       ],
-    });
+    })) as LspInitializeResult;
     client.notify("initialized", {});
     client.notify("textDocument/didOpen", {
       textDocument: {
@@ -547,6 +708,7 @@ async function withBasedPyrightSession<T>(
       filePath,
       fileUri,
       initialDiagnostics: diagnosticsParams.diagnostics ?? [],
+      semanticTokensLegend: normalizeSemanticTokensLegend(initializeResult),
     });
   } finally {
     client.dispose();
@@ -585,6 +747,11 @@ function createDiagnosticsSummary(count: number): string {
     : `Basedpyright reported ${String(count)} diagnostic(s) for the current virtual document.`;
 }
 
+function createSemanticTokensSummary(count: number): string {
+  return count === 0
+    ? "Basedpyright reported no semantic tokens for the current virtual document."
+    : `Basedpyright reported ${String(count)} semantic token(s) for the current virtual document.`;
+}
 export const basedPyrightInspectionBackend: InlineFormatInspectionBackend = {
   name: BASEDPYRIGHT_BACKEND_NAME,
   languages: [PYTHON_LANGUAGE],
@@ -623,16 +790,6 @@ export const basedPyrightInspectionBackend: InlineFormatInspectionBackend = {
       };
     }
 
-    if (request.kind === "semantic-tokens") {
-      return {
-        backendName: this.name,
-        language: request.document.language,
-        kind: request.kind,
-        summary:
-          "Semantic token rendering is not exposed yet in the basedpyright prototype backend.",
-      };
-    }
-
     return await withBasedPyrightSession(request, async (context) => {
       if (request.kind === "diagnostics") {
         const diagnostics = mapDiagnostics(context.initialDiagnostics);
@@ -648,6 +805,32 @@ export const basedPyrightInspectionBackend: InlineFormatInspectionBackend = {
         };
       }
 
+      if (request.kind === "semantic-tokens") {
+        const { legend, tokens } = mapSemanticTokens(
+          request.document.content,
+          (await context.client.request("textDocument/semanticTokens/full", {
+            textDocument: {
+              uri: context.fileUri,
+            },
+          })) as LspSemanticTokens | null,
+          context.semanticTokensLegend,
+        );
+
+        return {
+          backendName: this.name,
+          language: request.document.language,
+          kind: request.kind,
+          summary: createSemanticTokensSummary(tokens.length),
+          ...(tokens.length > 0
+            ? { ranges: tokens.map((token) => token.range) }
+            : {}),
+          payload: {
+            tokenCount: tokens.length,
+            tokens,
+            ...(legend !== null ? { legend } : {}),
+          },
+        };
+      }
       if (resolvedPosition === null) {
         return {
           backendName: this.name,

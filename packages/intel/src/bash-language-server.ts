@@ -629,7 +629,7 @@ export const bashLanguageServerInspectionBackend: InlineFormatInspectionBackend 
           language: request.document.language,
           kind: request.kind,
           summary:
-            "Semantic token rendering is not exposed yet in the bash-language-server prototype backend.",
+            "bash-language-server does not advertise semanticTokensProvider, so the prototype backend cannot expose semantic-token payloads for Bash yet.",
         };
       }
 

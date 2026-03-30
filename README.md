@@ -89,7 +89,7 @@ The **intel** package should expose meaning-oriented contracts and backend orche
   - defines the semantic/inspection contracts,
   - owns virtual-document and inspection request/result types,
   - now ships a TypeScript language-service backend for JavaScript/TypeScript hover, explain-symbol, definition, document-highlight, diagnostics, and semantic-token payload flows,
-  - now ships a basedpyright prototype backend for Python diagnostics, hover/explain-symbol, and definition flows,
+  - now ships a basedpyright prototype backend for Python diagnostics, hover/explain-symbol, definition, and semantic-token payload flows,
   - now ships a bash-language-server plus ShellCheck prototype backend for Bash diagnostics, hover-like explain, definition, and document-highlight flows,
   - still falls back to a scaffold backend for unsupported languages and any inspection kinds not yet implemented by a real backend,
   - does not own rendering or syntax-highlighting seams.
@@ -103,12 +103,14 @@ The **intel** package should expose meaning-oriented contracts and backend orche
 
 This repo is the source of truth for the package-backed capabilities shipped by `Banon-Labs/pi-inline-format-extensions`.
 
-| Language     | Detects this heredoc? | Basic highlighting | Inspection backend                                 | Smarter highlighting in the normal tool row | Status                               |
-| ------------ | --------------------- | ------------------ | -------------------------------------------------- | ------------------------------------------- | ------------------------------------ |
-| Python       | ✅                    | ✅                 | ✅ `basedpyright` prototype                        | ❌                                          | supported, prototype inspection path |
-| JavaScript   | ✅                    | ✅                 | ✅ TypeScript language service                     | ✅                                          | shipped                              |
-| TypeScript   | ✅                    | ✅                 | ✅ TypeScript language service                     | ✅                                          | shipped                              |
-| Bash / shell | ✅                    | ✅                 | ⚠️ partial (`bash-language-server` + `shellcheck`) | ❌                                          | supported, prototype inspection path |
+| Language     | Detects this heredoc? | Basic highlighting | Inspection backend                                                             | Smarter highlighting in the normal tool row | Status                                             |
+| ------------ | --------------------- | ------------------ | ------------------------------------------------------------------------------ | ------------------------------------------- | -------------------------------------------------- |
+| Python       | ✅                    | ✅                 | ✅ `basedpyright` prototype + semantic-token payloads                          | ❌                                          | supported, richer intel prototype path             |
+| JavaScript   | ✅                    | ✅                 | ✅ TypeScript language service                                                 | ✅                                          | shipped                                            |
+| TypeScript   | ✅                    | ✅                 | ✅ TypeScript language service                                                 | ✅                                          | shipped                                            |
+| Bash / shell | ✅                    | ✅                 | ⚠️ partial (`bash-language-server` + `shellcheck`; no semantic token provider) | ❌                                          | supported, prototype path with explicit parity gap |
+
+Bash parity investigation result: upstream `bash-language-server` exposes hover, definition, references, and document highlights, but it does **not** advertise LSP `semanticTokensProvider`. In this repo that means Bash can keep the prototype inspection path, but the normal tool-row smarter-highlighting path remains intentionally unavailable unless we add a different host-owned symbol-aware styling seam.
 
 ## Researched next candidates
 
