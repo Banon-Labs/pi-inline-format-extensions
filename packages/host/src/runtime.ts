@@ -428,22 +428,66 @@ function formatDefaultBashCall(
   return `${theme.fg("toolTitle", theme.bold(`$ ${command}`))}${timeoutSuffix}`;
 }
 
-function formatSemanticTokenLabel(
+function getSemanticTokenThemeColor(
   token: InlineFormatSemanticToken,
-): string | null {
-  const tokenText = token.text?.trim();
-  if (tokenText === undefined || tokenText.length === 0) {
-    return null;
+): "syntaxType" | "syntaxVariable" | "syntaxFunction" | "accent" | "toolTitle" {
+  switch (token.tokenType) {
+    case "class":
+    case "enum":
+    case "interface":
+    case "namespace":
+    case "typeParameter":
+    case "type":
+      return "syntaxType";
+    case "function":
+    case "member":
+      return "syntaxFunction";
+    case "parameter":
+    case "variable":
+    case "enumMember":
+    case "property":
+      return "syntaxVariable";
+    default:
+      return "accent";
   }
-
-  return [tokenText, token.tokenType, ...token.modifiers].join(" ");
 }
 
-function renderSemanticJavascriptFooter(
+function highlightInlineSegment(segment: string, language: string): string {
+  if (segment.length === 0) {
+    return "";
+  }
+
+  return highlightCodeWithRenderTheme(segment, language)[0] ?? segment;
+}
+
+function styleSemanticTokenText(
+  token: InlineFormatSemanticToken,
+  text: string,
+  theme: Pick<Theme, "fg" | "bold" | "italic" | "underline">,
+): string {
+  let styled = text;
+
+  if (token.modifiers.includes("declaration")) {
+    styled = theme.bold(styled);
+  }
+
+  if (token.modifiers.includes("readonly")) {
+    styled = theme.underline(styled);
+  }
+
+  if (token.modifiers.includes("defaultLibrary")) {
+    styled = theme.italic(styled);
+  }
+
+  return theme.fg(getSemanticTokenThemeColor(token), styled);
+}
+
+function renderSemanticallyHighlightedJavascriptLines(
   command: string,
   match: InlineFormatMatch,
-  theme: Pick<Theme, "fg" | "bold">,
-): string | null {
+  sourceLines: readonly string[],
+  theme: Pick<Theme, "fg" | "bold" | "italic" | "underline">,
+): string[] | null {
   if (match.language !== "javascript") {
     return null;
   }
@@ -453,27 +497,69 @@ function renderSemanticJavascriptFooter(
     return null;
   }
 
-  const labels = [
-    ...new Set(
-      collectInlineFormatSemanticTokens(
-        createInlineFormatVirtualDocument(region),
-      )
-        .map(formatSemanticTokenLabel)
-        .filter((label): label is string => label !== null),
-    ),
-  ].slice(0, 4);
-
-  if (labels.length === 0) {
+  const semanticTokens = collectInlineFormatSemanticTokens(
+    createInlineFormatVirtualDocument(region),
+  );
+  if (semanticTokens.length === 0) {
     return null;
   }
 
-  return `${theme.fg("toolTitle", theme.bold("// semantic "))}${theme.fg("muted", labels.join(" · "))}`;
+  const tokensByLine = new Map<number, InlineFormatSemanticToken[]>();
+  for (const token of semanticTokens) {
+    if (token.range.start.lineIndex !== token.range.end.lineIndex) {
+      return null;
+    }
+
+    const lineTokens = tokensByLine.get(token.range.start.lineIndex) ?? [];
+    lineTokens.push(token);
+    tokensByLine.set(token.range.start.lineIndex, lineTokens);
+  }
+
+  return sourceLines.map((line, lineIndex) => {
+    const lineTokens = [...(tokensByLine.get(lineIndex) ?? [])].sort(
+      (left, right) =>
+        left.range.start.columnIndex - right.range.start.columnIndex,
+    );
+
+    if (lineTokens.length === 0) {
+      return highlightInlineSegment(line, match.language);
+    }
+
+    let cursor = 0;
+    const renderedSegments: string[] = [];
+
+    for (const token of lineTokens) {
+      const start = token.range.start.columnIndex;
+      const end = token.range.end.columnIndex;
+
+      if (start < cursor || end < start) {
+        return highlightInlineSegment(line, match.language);
+      }
+
+      renderedSegments.push(
+        highlightInlineSegment(line.slice(cursor, start), match.language),
+      );
+      renderedSegments.push(
+        styleSemanticTokenText(
+          token,
+          highlightInlineSegment(line.slice(start, end), match.language),
+          theme,
+        ),
+      );
+      cursor = end;
+    }
+
+    renderedSegments.push(
+      highlightInlineSegment(line.slice(cursor), match.language),
+    );
+    return renderedSegments.join("");
+  });
 }
 
 function renderInlineHighlightedBashCall(
   command: string,
   timeout: number | undefined,
-  theme: Pick<Theme, "fg" | "bold">,
+  theme: Pick<Theme, "fg" | "bold" | "italic" | "underline">,
 ): string | null {
   const matches = detectInlineFormatMatches(command);
   if (matches.length === 0) {
@@ -493,10 +579,13 @@ function renderInlineHighlightedBashCall(
       continue;
     }
 
-    const highlightedLines = highlightCodeWithRenderTheme(
-      sourceLines.join("\n"),
-      match.language,
-    );
+    const highlightedLines =
+      renderSemanticallyHighlightedJavascriptLines(
+        command,
+        match,
+        sourceLines,
+        theme,
+      ) ?? highlightCodeWithRenderTheme(sourceLines.join("\n"), match.language);
 
     sourceLines.forEach((line, index) => {
       highlightedByLine.set(
@@ -521,14 +610,11 @@ function renderInlineHighlightedBashCall(
     return theme.fg("toolTitle", theme.bold(prefixedLine));
   });
 
-  const semanticFooter = matches
-    .map((match) => renderSemanticJavascriptFooter(command, match, theme))
-    .find((footer): footer is string => footer !== null);
   const timeoutSuffix = timeout
     ? theme.fg("muted", ` (timeout ${String(timeout)}s)`)
     : "";
 
-  return `${renderedLines.join("\n")}${timeoutSuffix}${semanticFooter !== undefined ? `\n${semanticFooter}` : ""}`;
+  return `${renderedLines.join("\n")}${timeoutSuffix}`;
 }
 
 async function useDeterministicModel(
