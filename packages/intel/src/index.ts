@@ -55,6 +55,13 @@ export interface InlineFormatInspectionDiagnostic {
   code?: string;
 }
 
+export interface InlineFormatSemanticToken {
+  range: InlineFormatInspectionRange;
+  tokenType: string;
+  modifiers: string[];
+  text?: string;
+}
+
 export interface InlineFormatInspectionResult {
   backendName: string;
   language: string;
@@ -486,19 +493,31 @@ function decodeTypeScriptSemanticTokenModifiers(
   );
 }
 
+function getSourceTextForRange(
+  sourceFile: ts.SourceFile,
+  range: InlineFormatInspectionRange,
+): string | undefined {
+  const start = sourceFile.getPositionOfLineAndCharacter(
+    range.start.lineIndex,
+    range.start.columnIndex,
+  );
+  const end = sourceFile.getPositionOfLineAndCharacter(
+    range.end.lineIndex,
+    range.end.columnIndex,
+  );
+
+  if (end <= start) {
+    return undefined;
+  }
+
+  return sourceFile.text.slice(start, end);
+}
+
 function mapEncodedTypeScriptSemanticTokens(
   sourceFile: ts.SourceFile,
   classifications: ts.Classifications,
-): Array<{
-  range: InlineFormatInspectionRange;
-  tokenType: string;
-  modifiers: string[];
-}> {
-  const result: Array<{
-    range: InlineFormatInspectionRange;
-    tokenType: string;
-    modifiers: string[];
-  }> = [];
+): InlineFormatSemanticToken[] {
+  const result: InlineFormatSemanticToken[] = [];
   const dense = classifications.spans;
 
   for (let index = 0; index < dense.length; index += 3) {
@@ -506,10 +525,16 @@ function mapEncodedTypeScriptSemanticTokens(
     const length = dense[index + 1] ?? 0;
     const encodedClassification = dense[index + 2] ?? 0;
 
+    const range = createRangeFromTextSpan(sourceFile, { start, length });
+    const tokenText = getSourceTextForRange(sourceFile, range)?.trim();
+
     result.push({
-      range: createRangeFromTextSpan(sourceFile, { start, length }),
+      range,
       tokenType: decodeTypeScriptSemanticTokenType(encodedClassification),
       modifiers: decodeTypeScriptSemanticTokenModifiers(encodedClassification),
+      ...(tokenText !== undefined && tokenText.length > 0
+        ? { text: tokenText }
+        : {}),
     });
   }
 
@@ -520,6 +545,31 @@ function createSemanticTokensSummary(tokenCount: number): string {
   return tokenCount === 0
     ? "TypeScript language service reported no semantic tokens for the current virtual document."
     : `TypeScript language service reported ${String(tokenCount)} semantic token(s) for the current virtual document.`;
+}
+
+export function collectInlineFormatSemanticTokens(
+  document: InlineFormatVirtualDocument,
+): InlineFormatSemanticToken[] {
+  if (!isTypeScriptBackedLanguage(document.language)) {
+    return [];
+  }
+
+  const session = createTypeScriptInspectionSession(document);
+  try {
+    return mapEncodedTypeScriptSemanticTokens(
+      session.sourceFile,
+      session.languageService.getEncodedSemanticClassifications(
+        session.fileName,
+        {
+          start: 0,
+          length: session.sourceFile.end,
+        },
+        ts.SemanticClassificationFormat.TwentyTwenty,
+      ),
+    );
+  } finally {
+    session.dispose();
+  }
 }
 
 function collectDiagnostics(

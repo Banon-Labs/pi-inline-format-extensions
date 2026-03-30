@@ -16,12 +16,14 @@ import type {
 } from "@pi-inline-format/shared-contract";
 import { typescriptInlineFormatPlugin } from "@pi-inline-format/typescript";
 import {
+  collectInlineFormatSemanticTokens,
   createInlineFormatVirtualDocument,
   inspectInlineFormatDocument,
   type InlineFormatInspectionKind,
   type InlineFormatInspectionPosition,
   type InlineFormatInspectionResult,
   type InlineFormatRegionReference,
+  type InlineFormatSemanticToken,
 } from "@pi-inline-format/intel";
 import {
   createBashToolDefinition,
@@ -426,6 +428,48 @@ function formatDefaultBashCall(
   return `${theme.fg("toolTitle", theme.bold(`$ ${command}`))}${timeoutSuffix}`;
 }
 
+function formatSemanticTokenLabel(
+  token: InlineFormatSemanticToken,
+): string | null {
+  const tokenText = token.text?.trim();
+  if (tokenText === undefined || tokenText.length === 0) {
+    return null;
+  }
+
+  return [tokenText, token.tokenType, ...token.modifiers].join(" ");
+}
+
+function renderSemanticJavascriptFooter(
+  command: string,
+  match: InlineFormatMatch,
+  theme: Pick<Theme, "fg" | "bold">,
+): string | null {
+  if (match.language !== "javascript") {
+    return null;
+  }
+
+  const region = createInlineFormatRegionReference(command, match.language);
+  if (region === null) {
+    return null;
+  }
+
+  const labels = [
+    ...new Set(
+      collectInlineFormatSemanticTokens(
+        createInlineFormatVirtualDocument(region),
+      )
+        .map(formatSemanticTokenLabel)
+        .filter((label): label is string => label !== null),
+    ),
+  ].slice(0, 4);
+
+  if (labels.length === 0) {
+    return null;
+  }
+
+  return `${theme.fg("toolTitle", theme.bold("// semantic "))}${theme.fg("muted", labels.join(" · "))}`;
+}
+
 function renderInlineHighlightedBashCall(
   command: string,
   timeout: number | undefined,
@@ -477,11 +521,14 @@ function renderInlineHighlightedBashCall(
     return theme.fg("toolTitle", theme.bold(prefixedLine));
   });
 
+  const semanticFooter = matches
+    .map((match) => renderSemanticJavascriptFooter(command, match, theme))
+    .find((footer): footer is string => footer !== null);
   const timeoutSuffix = timeout
     ? theme.fg("muted", ` (timeout ${String(timeout)}s)`)
     : "";
 
-  return `${renderedLines.join("\n")}${timeoutSuffix}`;
+  return `${renderedLines.join("\n")}${timeoutSuffix}${semanticFooter !== undefined ? `\n${semanticFooter}` : ""}`;
 }
 
 async function useDeterministicModel(
