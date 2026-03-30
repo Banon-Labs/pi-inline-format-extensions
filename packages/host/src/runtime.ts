@@ -482,13 +482,13 @@ function styleSemanticTokenText(
   return theme.fg(getSemanticTokenThemeColor(token), styled);
 }
 
-function renderSemanticallyHighlightedJavascriptLines(
+function renderSemanticallyHighlightedScriptLines(
   command: string,
   match: InlineFormatMatch,
   sourceLines: readonly string[],
   theme: Pick<Theme, "fg" | "bold" | "italic" | "underline">,
 ): string[] | null {
-  if (match.language !== "javascript") {
+  if (match.language !== "javascript" && match.language !== "typescript") {
     return null;
   }
 
@@ -580,7 +580,7 @@ function renderInlineHighlightedBashCall(
     }
 
     const highlightedLines =
-      renderSemanticallyHighlightedJavascriptLines(
+      renderSemanticallyHighlightedScriptLines(
         command,
         match,
         sourceLines,
