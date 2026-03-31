@@ -45,6 +45,20 @@ export type PythonSemanticTokensInspector = (
   kind: "semantic-tokens",
 ) => Promise<InlineFormatInspectionResult | null>;
 
+export type PythonSemanticTokensRenderEntrypoint<TResult> = (
+  payload: PythonSemanticTokensRenderHandoffPayload,
+) => TResult | Promise<TResult>;
+
+export interface PythonSemanticTokensRenderEntrypointReference<TResult> {
+  render: PythonSemanticTokensRenderEntrypoint<TResult>;
+}
+
+export function createPythonSemanticTokensRenderEntrypointReference<TResult>(
+  render: PythonSemanticTokensRenderEntrypoint<TResult>,
+): PythonSemanticTokensRenderEntrypointReference<TResult> {
+  return { render };
+}
+
 export function findPythonHeredocRange(command: string): {
   startLineIndex: number;
   endLineIndex: number;

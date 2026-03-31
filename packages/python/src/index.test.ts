@@ -12,6 +12,7 @@ import {
   collectPythonSemanticTokensRenderHandoffPayload,
   collectPythonSemanticTokensRenderSlicePayload,
   createPythonSemanticTokensBoundaryContext,
+  createPythonSemanticTokensRenderEntrypointReference,
 } from "./index.js";
 
 const SHIPPED_PYTHON_SAMPLE_COMMAND = `cat > /tmp/delete.me.py <<'PY'
@@ -181,6 +182,19 @@ test("assembles the remaining non-token Python render handoff arguments", async 
     collected.tokens.map((token) => token.text),
     ["main", "print"],
   );
+});
+
+test("creates a bounded reference to the host caller-supplied render entrypoint", () => {
+  let callCount = 0;
+  const render = () => {
+    callCount += 1;
+    return "unused";
+  };
+
+  const reference = createPythonSemanticTokensRenderEntrypointReference(render);
+
+  assert.equal(reference.render, render);
+  assert.equal(callCount, 0);
 });
 
 test("returns null when the command does not contain a Python heredoc", async () => {
