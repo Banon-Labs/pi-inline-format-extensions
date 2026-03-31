@@ -9,6 +9,7 @@ import type {
 import {
   collectNormalizedPythonSemanticTokensBoundaryPayload,
   collectPythonSemanticTokensBoundaryPayload,
+  collectPythonSemanticTokensRenderSlicePayload,
   createPythonSemanticTokensBoundaryContext,
 } from "./index.js";
 
@@ -138,6 +139,26 @@ test("normalizes the collected raw payload into host semantic tokens", async () 
       text: "print",
     },
   ]);
+});
+
+test("assembles the exact Python source-line slice beside normalized tokens", async () => {
+  const collected = await collectPythonSemanticTokensRenderSlicePayload(
+    SHIPPED_PYTHON_SAMPLE_COMMAND,
+    async () => SHIPPED_PYTHON_SEMANTIC_TOKENS_RESULT,
+    "/repo",
+  );
+
+  assert.ok(collected);
+  assert.deepStrictEqual(collected.sourceLines, [
+    "#!/usr/bin/env python3",
+    "",
+    "def main() -> None:",
+    '    print("hello")',
+  ]);
+  assert.deepStrictEqual(
+    collected.tokens.map((token) => token.text),
+    ["main", "print"],
+  );
 });
 
 test("returns null when the command does not contain a Python heredoc", async () => {
