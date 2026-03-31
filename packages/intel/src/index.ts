@@ -80,6 +80,103 @@ export interface InlineFormatInspectionBackend {
   ): Promise<InlineFormatInspectionResult | null>;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function normalizeInspectionPosition(
+  value: unknown,
+): InlineFormatInspectionPosition | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const { lineIndex, columnIndex } = value;
+  if (
+    typeof lineIndex !== "number" ||
+    !Number.isInteger(lineIndex) ||
+    typeof columnIndex !== "number" ||
+    !Number.isInteger(columnIndex)
+  ) {
+    return null;
+  }
+
+  return {
+    lineIndex,
+    columnIndex,
+  };
+}
+
+function normalizeInspectionRange(
+  value: unknown,
+): InlineFormatInspectionRange | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const start = normalizeInspectionPosition(value.start);
+  const end = normalizeInspectionPosition(value.end);
+  if (start === null || end === null) {
+    return null;
+  }
+
+  return {
+    start,
+    end,
+  };
+}
+
+function normalizeInspectionSemanticToken(
+  value: unknown,
+): InlineFormatSemanticToken | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const range = normalizeInspectionRange(value.range);
+  const { tokenType, modifiers, text } = value;
+  if (
+    range === null ||
+    typeof tokenType !== "string" ||
+    !Array.isArray(modifiers) ||
+    !modifiers.every((modifier) => typeof modifier === "string")
+  ) {
+    return null;
+  }
+
+  return {
+    range,
+    tokenType,
+    modifiers: [...modifiers],
+    ...(typeof text === "string" ? { text } : {}),
+  };
+}
+
+export function normalizeInlineFormatSemanticTokens(
+  result: Pick<InlineFormatInspectionResult, "kind" | "payload">,
+): InlineFormatSemanticToken[] {
+  if (result.kind !== "semantic-tokens" || !isRecord(result.payload)) {
+    return [];
+  }
+
+  const { tokens } = result.payload;
+  if (!Array.isArray(tokens)) {
+    return [];
+  }
+
+  const normalizedTokens: InlineFormatSemanticToken[] = [];
+  for (const token of tokens) {
+    const normalizedToken = normalizeInspectionSemanticToken(token);
+    if (normalizedToken === null) {
+      return [];
+    }
+
+    normalizedTokens.push(normalizedToken);
+  }
+
+  return normalizedTokens;
+}
+
 export function createInlineFormatVirtualDocument(
   region: InlineFormatRegionReference,
 ): InlineFormatVirtualDocument {
