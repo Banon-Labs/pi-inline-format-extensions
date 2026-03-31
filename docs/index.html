@@ -92,6 +92,22 @@
       .pi-statusbar {
         border-top: 1px solid var(--border);
       }
+      .pi-caption {
+        padding: 14px 16px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.04);
+      }
+      .pi-caption p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.7;
+        font-size: 0.92rem;
+      }
+      .pi-caption-links {
+        display: inline-flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
       .dots {
         display: flex;
         gap: 8px;
@@ -142,6 +158,7 @@
       pre {
         margin: 0;
         padding: 14px;
+        background: rgb(40, 50, 40);
         overflow: auto;
         white-space: pre-wrap;
         word-break: break-word;
@@ -214,23 +231,23 @@
                 <strong>Python</strong>
                 <span>actual ANSI capture from Pi</span>
               </div>
-              <pre> Use bash to write python to a file using heredocs. Execute into /tmp/delete.me.py
+              <pre> Use bash to run python from a heredoc with python3. Keep the transcript inline and normal.
 
 
 <span style="background-color:rgb(40, 50, 40)">
- </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">$ cat &gt; /tmp/delete.me.py &lt;&lt;'PY'</span><span style="background-color:rgb(40, 50, 40)">
+ </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">$ python3 &lt;&lt;'PY'</span><span style="background-color:rgb(40, 50, 40)">
  </span><span style="color:rgb(106, 153, 85);background-color:rgb(40, 50, 40)">#!/usr/bin/env python3</span><span style="background-color:rgb(40, 50, 40)">
 
  </span><span style="color:rgb(86, 156, 214);background-color:rgb(40, 50, 40)">def</span><span style="background-color:rgb(40, 50, 40)"> </span><span style="font-weight:700;background-color:rgb(40, 50, 40)"></span><span style="font-weight:700;color:rgb(220, 220, 170);background-color:rgb(40, 50, 40)">main</span><span style="background-color:rgb(40, 50, 40)">() -&gt; </span><span style="color:rgb(181, 206, 168);background-color:rgb(40, 50, 40)">None</span><span style="background-color:rgb(40, 50, 40)">:
-     </span><span style="font-style:italic;background-color:rgb(40, 50, 40)"></span><span style="font-style:italic;color:rgb(78, 201, 176);background-color:rgb(40, 50, 40)">print</span><span style="background-color:rgb(40, 50, 40)">(</span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">&quot;hello from /tmp/delete.me.py&quot;</span><span style="background-color:rgb(40, 50, 40)">)
+     </span><span style="font-style:italic;background-color:rgb(40, 50, 40)"></span><span style="font-style:italic;color:rgb(78, 201, 176);background-color:rgb(40, 50, 40)">print</span><span style="background-color:rgb(40, 50, 40)">(</span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">&quot;hello from py&quot;</span><span style="background-color:rgb(40, 50, 40)">)
 
  </span><span style="color:rgb(86, 156, 214);background-color:rgb(40, 50, 40)">if</span><span style="background-color:rgb(40, 50, 40)"> __name__ == </span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">&quot;__main__&quot;</span><span style="background-color:rgb(40, 50, 40)">:
      main()
  </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">PY</span><span style="background-color:rgb(40, 50, 40)">
 
- </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">(no output)</span><span style="background-color:rgb(40, 50, 40)">
+ </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">hello from py</span><span style="background-color:rgb(40, 50, 40)">
 
- </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">Took 0.0s</span><span style="background-color:rgb(40, 50, 40)"></span></pre>
+ </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">Took 0.1s</span><span style="background-color:rgb(40, 50, 40)"></span></pre>
             </section>
             <section class="example">
               <div class="example-header">
@@ -255,22 +272,22 @@
                 <strong>TypeScript</strong>
                 <span>actual ANSI capture from Pi</span>
               </div>
-              <pre> Use bash to write typescript to a file using heredocs. Execute into /tmp/delete.me.ts
+              <pre> Use bash to run typescript from a heredoc with npx tsx. Keep the transcript inline and normal.
 
 
 <span style="background-color:rgb(40, 50, 40)">
- </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">$ cat &gt; /tmp/delete.me.ts &lt;&lt;'TS'</span><span style="background-color:rgb(40, 50, 40)">
+ </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">$ npx tsx &lt;&lt;'TS'</span><span style="background-color:rgb(40, 50, 40)">
  </span><span style="color:rgb(86, 156, 214);background-color:rgb(40, 50, 40)">type</span><span style="background-color:rgb(40, 50, 40)"> </span><span style="font-weight:700;background-color:rgb(40, 50, 40)"></span><span style="font-weight:700;color:rgb(78, 201, 176);background-color:rgb(40, 50, 40)">Answer</span><span style="background-color:rgb(40, 50, 40)"> = {
    </span><span style="font-weight:700;background-color:rgb(40, 50, 40)"></span><span style="font-weight:700;color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">value</span><span style="background-color:rgb(40, 50, 40)">: </span><span style="color:rgb(78, 201, 176);background-color:rgb(40, 50, 40)">number</span><span style="background-color:rgb(40, 50, 40)">;
  };
 
  </span><span style="color:rgb(86, 156, 214);background-color:rgb(40, 50, 40)">const</span><span style="background-color:rgb(40, 50, 40)"> </span><span style="font-weight:700;text-decoration:underline;background-color:rgb(40, 50, 40)"></span><span style="font-weight:700;text-decoration:underline;color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">answer</span><span style="background-color:rgb(40, 50, 40)">: </span><span style="color:rgb(78, 201, 176);background-color:rgb(40, 50, 40)">Answer</span><span style="background-color:rgb(40, 50, 40)"> = { </span><span style="font-weight:700;background-color:rgb(40, 50, 40)"></span><span style="font-weight:700;color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">value</span><span style="background-color:rgb(40, 50, 40)">: </span><span style="color:rgb(181, 206, 168);background-color:rgb(40, 50, 40)">42</span><span style="background-color:rgb(40, 50, 40)"> };
- </span><span style="font-style:italic;background-color:rgb(40, 50, 40)"></span><span style="font-style:italic;color:rgb(78, 201, 176);background-color:rgb(40, 50, 40)">console</span><span style="background-color:rgb(40, 50, 40)">.</span><span style="font-style:italic;background-color:rgb(40, 50, 40)"></span><span style="font-style:italic;color:rgb(220, 220, 170);background-color:rgb(40, 50, 40)">log</span><span style="background-color:rgb(40, 50, 40)">(</span><span style="text-decoration:underline;background-color:rgb(40, 50, 40)"></span><span style="text-decoration:underline;color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">answer</span><span style="background-color:rgb(40, 50, 40)">.</span><span style="color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">value</span><span style="background-color:rgb(40, 50, 40)">);
+ </span><span style="font-style:italic;background-color:rgb(40, 50, 40)"></span><span style="font-style:italic;color:rgb(78, 201, 176);background-color:rgb(40, 50, 40)">console</span><span style="background-color:rgb(40, 50, 40)">.</span><span style="font-style:italic;background-color:rgb(40, 50, 40)"></span><span style="font-style:italic;color:rgb(220, 220, 170);background-color:rgb(40, 50, 40)">log</span><span style="background-color:rgb(40, 50, 40)">(</span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">&quot;hello from ts&quot;</span><span style="background-color:rgb(40, 50, 40)">, </span><span style="text-decoration:underline;background-color:rgb(40, 50, 40)"></span><span style="text-decoration:underline;color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">answer</span><span style="background-color:rgb(40, 50, 40)">.</span><span style="color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">value</span><span style="background-color:rgb(40, 50, 40)">);
  </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">TS</span><span style="background-color:rgb(40, 50, 40)">
 
- </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">(no output)</span><span style="background-color:rgb(40, 50, 40)">
+ </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">hello from ts 42</span><span style="background-color:rgb(40, 50, 40)">
 
- </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">Took 0.9s</span><span style="background-color:rgb(40, 50, 40)"></span></pre>
+ </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">Took 1.4s</span><span style="background-color:rgb(40, 50, 40)"></span></pre>
             </section>
             <section class="example">
               <div class="example-header">
@@ -292,6 +309,32 @@
             </section>
           </div>
         </div>
+        <div class="pi-caption">
+          <p>
+            Caption: every transcript panel above is derived from an actual ANSI
+            capture collected from Pi running in tmux; the outer page frame is
+            presentation chrome, not a literal full-screen Pi screenshot. Method
+            sources:
+            <span class="pi-caption-links">
+              <a
+                href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/scripts/build-pages-demo.mjs"
+                >capture + ANSI-to-HTML generator</a
+              >,
+              <a
+                href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/src/runtime.ts"
+                >deterministic scenario definitions</a
+              >,
+              <a
+                href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/extensions/index.ts"
+                >sample command sources</a
+              >,
+              <a
+                href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/.github/workflows/pages.yml"
+                >Pages publish workflow</a
+              >
+            </span>
+          </p>
+        </div>
         <div class="pi-statusbar">
           <span>render source: actual Pi ANSI captures</span>
           <span>proof source: repo tests + tmux evidence</span>
@@ -300,41 +343,6 @@
 
       <section class="links">
         <article class="card">
-          <h2>Authoritative proof links</h2>
-          <ul>
-            <li>
-              <a
-                href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/src/shipped-python-smarter-highlight.test.ts"
-                >Python smarter-highlight regression</a
-              >
-            </li>
-            <li>
-              <a
-                href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/src/shipped-javascript-smarter-highlight.test.ts"
-                >JavaScript smarter-highlight regression</a
-              >
-            </li>
-            <li>
-              <a
-                href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/src/shipped-typescript-smarter-highlight.test.ts"
-                >TypeScript smarter-highlight regression</a
-              >
-            </li>
-            <li>
-              <a
-                href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/src/shipped-bash-smarter-highlight.test.ts"
-                >Bash smarter-highlight regression</a
-              >
-            </li>
-            <li>
-              <a
-                href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/src/shipped-python-tool-row.test.ts"
-                >Python inspection-vs-tool-row proof</a
-              >
-            </li>
-          </ul>
-        </article>
-        <article class="card">
           <h2>Trust boundary</h2>
           <p>
             These panels are derived from real deterministic Pi captures rather
@@ -342,6 +350,40 @@
             surface; it is only a readable presentation layer over proof that
             already exists elsewhere in the repo and bd comments.
           </p>
+        </article>
+        <article class="card">
+          <h2>Capture generation sources</h2>
+          <ul>
+            <li>
+              <a
+                href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/scripts/build-pages-demo.mjs"
+                >scripts/build-pages-demo.mjs</a
+              >
+              — launches Pi in tmux, captures ANSI output, and converts SGR
+              styling into HTML spans
+            </li>
+            <li>
+              <a
+                href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/src/runtime.ts"
+                >packages/host/src/runtime.ts</a
+              >
+              — deterministic scenario prompts and representative bash commands
+            </li>
+            <li>
+              <a
+                href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/extensions/index.ts"
+                >packages/host/extensions/index.ts</a
+              >
+              — sample command sources exposed in the extension
+            </li>
+            <li>
+              <a
+                href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/.github/workflows/pages.yml"
+                >.github/workflows/pages.yml</a
+              >
+              — GitHub Pages publish path
+            </li>
+          </ul>
         </article>
       </section>
     </main>

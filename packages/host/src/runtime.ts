@@ -40,7 +40,7 @@ import { Type } from "@sinclair/typebox";
 import { collectHostBashSmarterHighlightTokens } from "./bash-smarter-highlight.js";
 import { collectHostPythonSmarterHighlightTokens } from "./python-smarter-highlight.js";
 
-const CANONICAL_PYTHON_HEREDOC_COMMAND = `cat > /tmp/delete.me.py <<'PY'
+const CANONICAL_PYTHON_HEREDOC_COMMAND = `python3 <<'PY'
 #!/usr/bin/env python3
 
 print("hello")
@@ -66,7 +66,7 @@ const BASH_PARAMS = Type.Object({
 export const INLINE_DETERMINISTIC_PROVIDER = "inline-deterministic";
 export const INLINE_DETERMINISTIC_MODEL = "canonical-heredoc-compare";
 export const INLINE_DETERMINISTIC_PROMPT =
-  "Use bash to write python to a file using heredocs. Execute into /tmp/delete.me.py";
+  "Use bash to run python from a heredoc with python3. Keep the transcript inline and normal.";
 export const INLINE_DETERMINISTIC_USE_COMMAND =
   "inline-format-use-deterministic-model";
 export const INLINE_DETERMINISTIC_RUN_COMMAND =
@@ -112,11 +112,11 @@ const INLINE_DETERMINISTIC_SCENARIOS = [
     model: INLINE_DETERMINISTIC_MODEL,
     prompt: INLINE_DETERMINISTIC_PROMPT,
     toolCallId: "call_inline_format_deterministic_python_bash",
-    bashCommand: `cat > /tmp/delete.me.py <<'PY'
+    bashCommand: `python3 <<'PY'
 #!/usr/bin/env python3
 
 def main() -> None:
-    print("hello from /tmp/delete.me.py")
+    print("hello from py")
 
 if __name__ == "__main__":
     main()
@@ -139,15 +139,15 @@ JS`,
     label: "TypeScript",
     model: "typescript-heredoc-compare",
     prompt:
-      "Use bash to write typescript to a file using heredocs. Execute into /tmp/delete.me.ts",
+      "Use bash to run typescript from a heredoc with npx tsx. Keep the transcript inline and normal.",
     toolCallId: "call_inline_format_deterministic_typescript_bash",
-    bashCommand: `cat > /tmp/delete.me.ts <<'TS'
+    bashCommand: `npx tsx <<'TS'
 type Answer = {
   value: number;
 };
 
 const answer: Answer = { value: 42 };
-console.log(answer.value);
+console.log("hello from ts", answer.value);
 TS`,
   },
   {

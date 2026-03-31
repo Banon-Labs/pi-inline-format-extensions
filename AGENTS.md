@@ -12,6 +12,12 @@ npm run typecheck
 npm run check
 ```
 
+## Smoke evidence
+
+- For repo-local Pi/tmux smoke proof and demo capture work, preserve ANSI escape sequences in the artifact you cite.
+- Use capture methods that keep styling intact, such as `tmux capture-pane -e` or tool wrappers with `ansi=true`.
+- Do not treat stripped/plaintext pane output as sufficient proof when validating rendered tool rows, terminal styling, or Pages demos derived from Pi output.
+
 ## Architecture rules
 
 - Keep `packages/host` as the only owner of Pi runtime seams such as built-in tool overrides and deterministic compare helpers.

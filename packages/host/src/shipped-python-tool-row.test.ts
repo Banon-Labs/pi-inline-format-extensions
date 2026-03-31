@@ -9,11 +9,14 @@ import {
 
 import { createHostBashRuntime, detectInlineFormatMatches } from "./index.js";
 
-const SHIPPED_PYTHON_SAMPLE_COMMAND = `cat > /tmp/delete.me.py <<'PY'
+const SHIPPED_PYTHON_SAMPLE_COMMAND = `python3 <<'PY'
 #!/usr/bin/env python3
 
 def main() -> None:
-    print("hello")
+    print("hello from py")
+
+if __name__ == "__main__":
+    main()
 PY`;
 
 const markerTheme = {
@@ -51,7 +54,7 @@ test("keeps Python semantic-token inspection truthful and now threads shipped to
 
   assert.ok(
     semanticTokensResult?.kind === "semantic-tokens",
-    "expected basedpyright semantic-token inspection output for the shipped Python sample",
+    "expected basedpyright semantic-token inspection output for the shipped inline Python sample",
   );
   assert.deepStrictEqual(
     normalizeInlineFormatSemanticTokens(semanticTokensResult).map((token) => ({
@@ -69,6 +72,16 @@ test("keeps Python semantic-token inspection truthful and now threads shipped to
         text: "print",
         tokenType: "function",
         modifiers: ["defaultLibrary", "builtin"],
+      },
+      {
+        text: "__name__",
+        tokenType: "variable",
+        modifiers: [],
+      },
+      {
+        text: "main",
+        tokenType: "function",
+        modifiers: [],
       },
     ],
   );
@@ -106,6 +119,9 @@ test("keeps Python semantic-token inspection truthful and now threads shipped to
     "#!/usr/bin/env python3",
     "",
     "def main() -> None:",
-    '    print("hello")',
+    '    print("hello from py")',
+    "",
+    'if __name__ == "__main__":',
+    "    main()",
   ]);
 });

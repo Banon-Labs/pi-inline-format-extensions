@@ -6,14 +6,17 @@ import { createInlineFormatVirtualDocument } from "@pi-inline-format/intel";
 import { detectInlineFormatMatches } from "./index.js";
 import { collectHostPythonSmarterHighlightTokens } from "./python-smarter-highlight.js";
 
-const SHIPPED_PYTHON_SAMPLE_COMMAND = `cat > /tmp/delete.me.py <<'PY'
+const SHIPPED_PYTHON_SAMPLE_COMMAND = `python3 <<'PY'
 #!/usr/bin/env python3
 
 def main() -> None:
-    print("hello")
+    print("hello from py")
+
+if __name__ == "__main__":
+    main()
 PY`;
 
-test("collects bounded Python semantic tokens for the shipped sample path", () => {
+test("collects bounded Python semantic tokens for the shipped inline sample source", () => {
   const lines = SHIPPED_PYTHON_SAMPLE_COMMAND.split("\n");
   const match = detectInlineFormatMatches(SHIPPED_PYTHON_SAMPLE_COMMAND).find(
     (candidate) => candidate.language === "python",
@@ -27,7 +30,6 @@ test("collects bounded Python semantic tokens for the shipped sample path", () =
     source: lines
       .slice(match.startLineIndex, match.endLineIndex + 1)
       .join("\n"),
-    filePathHint: "/tmp/delete.me.py",
   });
 
   assert.deepStrictEqual(
@@ -51,7 +53,7 @@ test("collects bounded Python semantic tokens for the shipped sample path", () =
   );
 });
 
-test("returns no Python tokens outside the bounded shipped sample path", () => {
+test("returns no Python tokens outside the bounded shipped inline sample source", () => {
   const lines = SHIPPED_PYTHON_SAMPLE_COMMAND.split("\n");
   const match = detectInlineFormatMatches(SHIPPED_PYTHON_SAMPLE_COMMAND).find(
     (candidate) => candidate.language === "python",
@@ -61,14 +63,14 @@ test("returns no Python tokens outside the bounded shipped sample path", () => {
   const document = createInlineFormatVirtualDocument({
     language: "python",
     match,
-    command: SHIPPED_PYTHON_SAMPLE_COMMAND.replaceAll(
-      "/tmp/delete.me.py",
-      "/tmp/not-shipped.py",
+    command: SHIPPED_PYTHON_SAMPLE_COMMAND.replace(
+      "hello from py",
+      "goodbye from py",
     ),
     source: lines
       .slice(match.startLineIndex, match.endLineIndex + 1)
-      .join("\n"),
-    filePathHint: "/tmp/not-shipped.py",
+      .join("\n")
+      .replace("hello from py", "goodbye from py"),
   });
 
   assert.deepStrictEqual(collectHostPythonSmarterHighlightTokens(document), []);

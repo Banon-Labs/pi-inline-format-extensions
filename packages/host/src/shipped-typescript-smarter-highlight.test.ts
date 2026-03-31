@@ -8,13 +8,13 @@ import {
   SHIPPED_TYPESCRIPT_SMARTER_HIGHLIGHT_STYLE_BUCKETS,
 } from "./index.js";
 
-const SHIPPED_TYPESCRIPT_SAMPLE_COMMAND = `cat > /tmp/delete.me.ts <<'TS'
+const SHIPPED_TYPESCRIPT_SAMPLE_COMMAND = `npx tsx <<'TS'
 type Answer = {
   value: number;
 };
 
 const answer: Answer = { value: 42 };
-console.log(answer.value);
+console.log("hello from ts", answer.value);
 TS`;
 
 const markerTheme = {

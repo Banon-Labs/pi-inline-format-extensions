@@ -8,11 +8,14 @@ import {
   SHIPPED_PYTHON_SMARTER_HIGHLIGHT_STYLE_BUCKETS,
 } from "./index.js";
 
-const SHIPPED_PYTHON_SAMPLE_COMMAND = `cat > /tmp/delete.me.py <<'PY'
+const SHIPPED_PYTHON_SAMPLE_COMMAND = `python3 <<'PY'
 #!/usr/bin/env python3
 
 def main() -> None:
-    print("hello")
+    print("hello from py")
+
+if __name__ == "__main__":
+    main()
 PY`;
 
 const markerTheme = {

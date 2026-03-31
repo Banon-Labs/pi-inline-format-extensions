@@ -3,7 +3,13 @@ import type {
   InlineFormatVirtualDocument,
 } from "@pi-inline-format/intel";
 
-const SHIPPED_PYTHON_FILE_PATH = "/tmp/delete.me.py";
+const SHIPPED_PYTHON_SAMPLE_SOURCE = `#!/usr/bin/env python3
+
+def main() -> None:
+    print("hello from py")
+
+if __name__ == "__main__":
+    main()`;
 const PYTHON_FUNCTION_DECLARATION_PATTERN =
   /^\s*def\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(/u;
 const PYTHON_BUILTIN_PRINT_PATTERN = /^\s*print\s*\(/u;
@@ -80,16 +86,22 @@ function collectBuiltinPrintToken(
   );
 }
 
+function isShippedInlinePythonSample(
+  document: Pick<InlineFormatVirtualDocument, "language" | "content">,
+): boolean {
+  return (
+    document.language === "python" &&
+    document.content === SHIPPED_PYTHON_SAMPLE_SOURCE
+  );
+}
+
 export function collectHostPythonSmarterHighlightTokens(
   document: Pick<
     InlineFormatVirtualDocument,
     "language" | "content" | "filePath"
   >,
 ): InlineFormatSemanticToken[] {
-  if (
-    document.language !== "python" ||
-    document.filePath !== SHIPPED_PYTHON_FILE_PATH
-  ) {
+  if (!isShippedInlinePythonSample(document)) {
     return [];
   }
 

@@ -13,7 +13,7 @@ const scenarios = [
     label: "Python",
     model: "inline-deterministic/canonical-heredoc-compare",
     prompt:
-      "Use bash to write python to a file using heredocs. Execute into /tmp/delete.me.py",
+      "Use bash to run python from a heredoc with python3. Keep the transcript inline and normal.",
   },
   {
     key: "javascript",
@@ -27,7 +27,7 @@ const scenarios = [
     label: "TypeScript",
     model: "inline-deterministic/typescript-heredoc-compare",
     prompt:
-      "Use bash to write typescript to a file using heredocs. Execute into /tmp/delete.me.ts",
+      "Use bash to run typescript from a heredoc with npx tsx. Keep the transcript inline and normal.",
   },
   {
     key: "bash",
@@ -339,6 +339,22 @@ const html = `<!doctype html>
       }
       .pi-topbar { border-bottom: 1px solid var(--border); }
       .pi-statusbar { border-top: 1px solid var(--border); }
+      .pi-caption {
+        padding: 14px 16px;
+        border-top: 1px solid rgba(255,255,255,0.08);
+        background: rgba(255, 255, 255, 0.04);
+      }
+      .pi-caption p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.7;
+        font-size: 0.92rem;
+      }
+      .pi-caption-links {
+        display: inline-flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
       .dots { display: flex; gap: 8px; }
       .dot { width: 10px; height: 10px; border-radius: 999px; }
       .red { background: #ff5f57; }
@@ -369,6 +385,7 @@ const html = `<!doctype html>
       pre {
         margin: 0;
         padding: 14px;
+        background: rgb(40, 50, 40);
         overflow: auto;
         white-space: pre-wrap;
         word-break: break-word;
@@ -418,6 +435,17 @@ const html = `<!doctype html>
             ${cards}
           </div>
         </div>
+        <div class="pi-caption">
+          <p>
+            Caption: every transcript panel above is derived from an actual ANSI capture collected from Pi running in tmux; the outer page frame is presentation chrome, not a literal full-screen Pi screenshot. Method sources:
+            <span class="pi-caption-links">
+              <a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/scripts/build-pages-demo.mjs">capture + ANSI-to-HTML generator</a>,
+              <a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/src/runtime.ts">deterministic scenario definitions</a>,
+              <a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/extensions/index.ts">sample command sources</a>,
+              <a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/.github/workflows/pages.yml">Pages publish workflow</a>
+            </span>
+          </p>
+        </div>
         <div class="pi-statusbar">
           <span>render source: actual Pi ANSI captures</span>
           <span>proof source: repo tests + tmux evidence</span>
@@ -426,20 +454,19 @@ const html = `<!doctype html>
 
       <section class="links">
         <article class="card">
-          <h2>Authoritative proof links</h2>
-          <ul>
-            <li><a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/src/shipped-python-smarter-highlight.test.ts">Python smarter-highlight regression</a></li>
-            <li><a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/src/shipped-javascript-smarter-highlight.test.ts">JavaScript smarter-highlight regression</a></li>
-            <li><a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/src/shipped-typescript-smarter-highlight.test.ts">TypeScript smarter-highlight regression</a></li>
-            <li><a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/src/shipped-bash-smarter-highlight.test.ts">Bash smarter-highlight regression</a></li>
-            <li><a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/src/shipped-python-tool-row.test.ts">Python inspection-vs-tool-row proof</a></li>
-          </ul>
-        </article>
-        <article class="card">
           <h2>Trust boundary</h2>
           <p>
             These panels are derived from real deterministic Pi captures rather than handwritten mock snippets. GitHub Pages is still not the proof surface; it is only a readable presentation layer over proof that already exists elsewhere in the repo and bd comments.
           </p>
+        </article>
+        <article class="card">
+          <h2>Capture generation sources</h2>
+          <ul>
+            <li><a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/scripts/build-pages-demo.mjs">scripts/build-pages-demo.mjs</a> — launches Pi in tmux, captures ANSI output, and converts SGR styling into HTML spans</li>
+            <li><a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/src/runtime.ts">packages/host/src/runtime.ts</a> — deterministic scenario prompts and representative bash commands</li>
+            <li><a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/extensions/index.ts">packages/host/extensions/index.ts</a> — sample command sources exposed in the extension</li>
+            <li><a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/.github/workflows/pages.yml">.github/workflows/pages.yml</a> — GitHub Pages publish path</li>
+          </ul>
         </article>
       </section>
     </main>

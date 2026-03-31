@@ -4,7 +4,7 @@ export const SHIPPED_TYPESCRIPT_SMARTER_HIGHLIGHT_SEGMENTS = [
   ["};"],
   [""],
   ["const ", "answer", ": ", "Answer", " = { ", "value", ": 42 };"],
-  ["console", ".", "log", "(", "answer", ".", "value", ");"],
+  ["console", ".", "log", '("hello from ts", ', "answer", ".", "value", ");"],
 ] as const;
 
 export const SHIPPED_TYPESCRIPT_SMARTER_HIGHLIGHT_STYLE_BUCKETS = [

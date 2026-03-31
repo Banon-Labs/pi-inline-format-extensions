@@ -22,23 +22,26 @@ const HIGHLIGHT_SYMBOL_COMMAND = "inline-format-highlight-symbol";
 const SEMANTIC_TOKENS_COMMAND = "inline-format-semantic-tokens";
 const DIAGNOSTICS_COMMAND = "inline-format-diagnostics-sample";
 const SAMPLE_COMMANDS = {
-  python: `cat > /tmp/delete.me.py <<'PY'
+  python: `python3 <<'PY'
 #!/usr/bin/env python3
 
 def main() -> None:
-    print("hello")
+    print("hello from py")
+
+if __name__ == "__main__":
+    main()
 PY`,
   javascript: `node <<'JS'
 const value = 42;
 console.log(value);
 JS`,
-  typescript: `cat > /tmp/delete.me.ts <<'TS'
+  typescript: `npx tsx <<'TS'
 type Answer = {
   value: number;
 };
 
 const answer: Answer = { value: 42 };
-console.log(answer.value);
+console.log("hello from ts", answer.value);
 TS`,
   bash: `bash <<'SH'
 set -euo pipefail
