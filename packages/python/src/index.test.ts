@@ -1,0 +1,90 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+
+import type {
+  InlineFormatInspectionResult,
+  InlineFormatVirtualDocument,
+} from "@pi-inline-format/intel";
+
+import {
+  collectPythonSemanticTokensBoundaryPayload,
+  createPythonSemanticTokensBoundaryContext,
+} from "./index.js";
+
+const SHIPPED_PYTHON_SAMPLE_COMMAND = `cat > /tmp/delete.me.py <<'PY'
+#!/usr/bin/env python3
+
+def main() -> None:
+    print("hello")
+PY`;
+
+test("pins the shipped Python sample semantic-token collection boundary", () => {
+  const context = createPythonSemanticTokensBoundaryContext(
+    SHIPPED_PYTHON_SAMPLE_COMMAND,
+    "/repo",
+  );
+
+  assert.ok(context);
+  assert.equal(context.match.pluginName, "python");
+  assert.equal(context.match.language, "python");
+  assert.equal(context.startLineIndex, 1);
+  assert.equal(context.endLineIndex, 4);
+  assert.equal(
+    context.source,
+    '#!/usr/bin/env python3\n\ndef main() -> None:\n    print("hello")',
+  );
+  assert.equal(context.filePath, "/tmp/delete.me.py");
+  assert.equal(context.document.language, "python");
+  assert.equal(context.document.filePath, "/tmp/delete.me.py");
+  assert.equal(context.document.region.projectRoot, "/repo");
+});
+
+test("collects the raw semantic-token payload without normalization", async () => {
+  let receivedDocument: InlineFormatVirtualDocument | undefined;
+  const rawResult: InlineFormatInspectionResult = {
+    backendName: "stub-python-intel",
+    language: "python",
+    kind: "semantic-tokens",
+    summary: "stubbed raw payload",
+    payload: {
+      tokenCount: 1,
+      tokens: [
+        {
+          range: {
+            start: { lineIndex: 2, columnIndex: 4 },
+            end: { lineIndex: "bad", columnIndex: 8 },
+          },
+          tokenType: "function",
+          modifiers: ["declaration"],
+        },
+      ],
+    },
+  };
+
+  const collected = await collectPythonSemanticTokensBoundaryPayload(
+    SHIPPED_PYTHON_SAMPLE_COMMAND,
+    async (document, kind) => {
+      receivedDocument = document;
+      assert.equal(kind, "semantic-tokens");
+      return rawResult;
+    },
+    "/repo",
+  );
+
+  assert.ok(receivedDocument);
+  assert.ok(collected);
+  assert.equal(collected.context.document, receivedDocument);
+  assert.equal(collected.rawResult, rawResult);
+  assert.deepStrictEqual(collected.rawResult?.payload, rawResult.payload);
+});
+
+test("returns null when the command does not contain a Python heredoc", async () => {
+  const collected = await collectPythonSemanticTokensBoundaryPayload(
+    "echo 'not python'",
+    async () => {
+      throw new Error("should not inspect non-python commands");
+    },
+  );
+
+  assert.equal(collected, null);
+});

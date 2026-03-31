@@ -1,3 +1,8 @@
+import {
+  createInlineFormatVirtualDocument,
+  type InlineFormatInspectionResult,
+  type InlineFormatVirtualDocument,
+} from "@pi-inline-format/intel";
 import type {
   InlineFormatMatch,
   InlineFormatPlugin,
@@ -5,6 +10,26 @@ import type {
 
 export const PYTHON_HEREDOC_MARKERS = ["<<'PY'", '<<"PY"', "<<PY"] as const;
 export const PYTHON_HEREDOC_TERMINATOR = "PY";
+
+export interface PythonSemanticTokensBoundaryContext {
+  command: string;
+  source: string;
+  startLineIndex: number;
+  endLineIndex: number;
+  filePath: string;
+  document: InlineFormatVirtualDocument;
+  match: InlineFormatMatch;
+}
+
+export interface PythonSemanticTokensBoundaryPayload {
+  context: PythonSemanticTokensBoundaryContext;
+  rawResult: InlineFormatInspectionResult | null;
+}
+
+export type PythonSemanticTokensInspector = (
+  document: InlineFormatVirtualDocument,
+  kind: "semantic-tokens",
+) => Promise<InlineFormatInspectionResult | null>;
 
 export function findPythonHeredocRange(command: string): {
   startLineIndex: number;
@@ -67,6 +92,75 @@ export function describePythonHeredoc(command: string): {
     startLineIndex: heredocRange.startLineIndex,
     endLineIndex: heredocRange.endLineIndex,
     source,
+  };
+}
+
+function inferPythonFilePathHint(command: string): string | undefined {
+  const fileWriteMatch = /cat\s*>\s*(?<path>\S+)\s*<</u.exec(command);
+  return fileWriteMatch?.groups?.path;
+}
+
+export function createPythonSemanticTokensBoundaryContext(
+  command: string,
+  projectRoot: string = process.cwd(),
+): PythonSemanticTokensBoundaryContext | null {
+  const heredoc = describePythonHeredoc(command);
+
+  if (heredoc === null) {
+    return null;
+  }
+
+  const match: InlineFormatMatch = {
+    pluginName: "python",
+    language: "python",
+    startLineIndex: heredoc.startLineIndex + 1,
+    endLineIndex: heredoc.endLineIndex - 1,
+  };
+  const filePathHint = inferPythonFilePathHint(command);
+  const region = {
+    language: "python" as const,
+    match,
+    command,
+    source: heredoc.source,
+    projectRoot,
+  };
+  const document = createInlineFormatVirtualDocument(
+    filePathHint === undefined
+      ? region
+      : {
+          ...region,
+          filePathHint,
+        },
+  );
+
+  return {
+    command,
+    source: heredoc.source,
+    startLineIndex: match.startLineIndex,
+    endLineIndex: match.endLineIndex,
+    filePath: document.filePath,
+    document,
+    match,
+  };
+}
+
+export async function collectPythonSemanticTokensBoundaryPayload(
+  command: string,
+  inspect: PythonSemanticTokensInspector,
+  projectRoot: string = process.cwd(),
+): Promise<PythonSemanticTokensBoundaryPayload | null> {
+  const context = createPythonSemanticTokensBoundaryContext(
+    command,
+    projectRoot,
+  );
+
+  if (context === null) {
+    return null;
+  }
+
+  return {
+    context,
+    rawResult: await inspect(context.document, "semantic-tokens"),
   };
 }
 
