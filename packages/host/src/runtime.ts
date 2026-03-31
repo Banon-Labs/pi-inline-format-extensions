@@ -38,6 +38,13 @@ import { Text } from "@mariozechner/pi-tui";
 import { Type } from "@sinclair/typebox";
 
 import { collectHostBashSmarterHighlightTokens } from "./bash-smarter-highlight.js";
+import {
+  DEMO_SAMPLE_VARIANTS,
+  INLINE_DETERMINISTIC_SCENARIOS,
+  STANDARD_PYTHON_SAMPLE_COMMAND,
+  type DemoSample,
+  type DemoScenarioKey,
+} from "./demo-samples.js";
 import { collectHostPythonSmarterHighlightTokens } from "./python-smarter-highlight.js";
 
 const CANONICAL_PYTHON_HEREDOC_COMMAND = `python3 <<'PY'
@@ -64,9 +71,10 @@ const BASH_PARAMS = Type.Object({
 });
 
 export const INLINE_DETERMINISTIC_PROVIDER = "inline-deterministic";
-export const INLINE_DETERMINISTIC_MODEL = "canonical-heredoc-compare";
+export const INLINE_DETERMINISTIC_MODEL =
+  DEMO_SAMPLE_VARIANTS.python.standard.model;
 export const INLINE_DETERMINISTIC_PROMPT =
-  "Use bash to run python from a heredoc with python3. Keep the transcript inline and normal.";
+  DEMO_SAMPLE_VARIANTS.python.standard.prompt;
 export const INLINE_DETERMINISTIC_USE_COMMAND =
   "inline-format-use-deterministic-model";
 export const INLINE_DETERMINISTIC_RUN_COMMAND =
@@ -94,77 +102,11 @@ For the canonical heredoc flow in this repo, the preferred behavior is:
 - do not add any assistant text before or after a successful bash tool result`;
 
 const INLINE_DETERMINISTIC_API = "inline-deterministic-api";
-type DeterministicScenarioKey = "python" | "javascript" | "typescript" | "bash";
+type DeterministicScenarioKey = DemoScenarioKey;
+type DeterministicScenario = DemoSample;
 
-type DeterministicScenario = {
-  key: DeterministicScenarioKey;
-  label: string;
-  model: string;
-  prompt: string;
-  toolCallId: string;
-  bashCommand: string;
-};
-
-const INLINE_DETERMINISTIC_SCENARIOS = [
-  {
-    key: "python",
-    label: "Python",
-    model: INLINE_DETERMINISTIC_MODEL,
-    prompt: INLINE_DETERMINISTIC_PROMPT,
-    toolCallId: "call_inline_format_deterministic_python_bash",
-    bashCommand: `python3 <<'PY'
-#!/usr/bin/env python3
-
-def main() -> None:
-    print("hello from py")
-
-if __name__ == "__main__":
-    main()
-PY`,
-  },
-  {
-    key: "javascript",
-    label: "JavaScript",
-    model: "javascript-heredoc-compare",
-    prompt:
-      "Use bash to run javascript from a heredoc with node. Keep the transcript inline and normal.",
-    toolCallId: "call_inline_format_deterministic_javascript_bash",
-    bashCommand: `node <<'JS'
-const value = 42;
-console.log("hello from js", value);
-JS`,
-  },
-  {
-    key: "typescript",
-    label: "TypeScript",
-    model: "typescript-heredoc-compare",
-    prompt:
-      "Use bash to run typescript from a heredoc with npx tsx. Keep the transcript inline and normal.",
-    toolCallId: "call_inline_format_deterministic_typescript_bash",
-    bashCommand: `npx tsx <<'TS'
-type Answer = {
-  value: number;
-};
-
-const answer: Answer = { value: 42 };
-console.log("hello from ts", answer.value);
-TS`,
-  },
-  {
-    key: "bash",
-    label: "Bash",
-    model: "bash-heredoc-compare",
-    prompt:
-      "Use bash to run shell from a heredoc with bash. Keep the transcript inline and normal.",
-    toolCallId: "call_inline_format_deterministic_bash_bash",
-    bashCommand: `bash <<'SH'
-set -euo pipefail
-echo "hello from sh"
-SH`,
-  },
-] as const satisfies readonly DeterministicScenario[];
-
-const INLINE_DETERMINISTIC_DEFAULT_SCENARIO = INLINE_DETERMINISTIC_SCENARIOS[0];
+const INLINE_DETERMINISTIC_DEFAULT_SCENARIO =
+  INLINE_DETERMINISTIC_SCENARIOS[0]!;
 const INLINE_DETERMINISTIC_SCENARIO_KEYS = INLINE_DETERMINISTIC_SCENARIOS.map(
   (scenario) => scenario.key,
 ).join(", ");
@@ -247,7 +189,7 @@ function getDeterministicScenarioByKey(
   key: string,
 ): DeterministicScenario | undefined {
   return INLINE_DETERMINISTIC_SCENARIOS.find(
-    (scenario) => scenario.key === key,
+    (scenario) => scenario.key === key || scenario.language === key,
   );
 }
 

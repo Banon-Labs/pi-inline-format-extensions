@@ -3,16 +3,22 @@ import type {
   InlineFormatVirtualDocument,
 } from "@pi-inline-format/intel";
 
-const SHIPPED_PYTHON_SAMPLE_SOURCE = `#!/usr/bin/env python3
+import {
+  STANDARD_PYTHON_SAMPLE_COMMAND,
+  VERBOSE_PYTHON_SAMPLE_COMMAND,
+} from "./demo-samples.js";
 
-def main() -> None:
-    print("hello from py")
-
-if __name__ == "__main__":
-    main()`;
+const SHIPPED_PYTHON_SAMPLE_SOURCES = new Set([
+  extractPythonSource(STANDARD_PYTHON_SAMPLE_COMMAND),
+  extractPythonSource(VERBOSE_PYTHON_SAMPLE_COMMAND),
+]);
 const PYTHON_FUNCTION_DECLARATION_PATTERN =
   /^\s*def\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(/u;
 const PYTHON_BUILTIN_PRINT_PATTERN = /^\s*print\s*\(/u;
+
+function extractPythonSource(command: string): string {
+  return command.split("\n").slice(1, -1).join("\n");
+}
 
 function createToken(
   lineIndex: number,
@@ -91,7 +97,7 @@ function isShippedInlinePythonSample(
 ): boolean {
   return (
     document.language === "python" &&
-    document.content === SHIPPED_PYTHON_SAMPLE_SOURCE
+    SHIPPED_PYTHON_SAMPLE_SOURCES.has(document.content)
   );
 }
 

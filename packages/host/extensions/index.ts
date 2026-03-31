@@ -12,6 +12,7 @@ import {
   registerHostRuntimeSeams,
   validateCanonicalPythonHeredocParity,
 } from "../src/index.js";
+import { STANDARD_SAMPLE_COMMANDS } from "../src/demo-samples.js";
 
 const HOST_STATUS_COMMAND = "inline-format-host-status";
 const INTEL_STATUS_COMMAND = "inline-format-intel-status";
@@ -21,44 +22,13 @@ const FIND_DEFINITION_COMMAND = "inline-format-find-definition";
 const HIGHLIGHT_SYMBOL_COMMAND = "inline-format-highlight-symbol";
 const SEMANTIC_TOKENS_COMMAND = "inline-format-semantic-tokens";
 const DIAGNOSTICS_COMMAND = "inline-format-diagnostics-sample";
-const SAMPLE_COMMANDS = {
-  python: `python3 <<'PY'
-#!/usr/bin/env python3
-
-def main() -> None:
-    print("hello from py")
-
-if __name__ == "__main__":
-    main()
-PY`,
-  javascript: `node <<'JS'
-const value = 42;
-console.log(value);
-JS`,
-  typescript: `npx tsx <<'TS'
-type Answer = {
-  value: number;
-};
-
-const answer: Answer = { value: 42 };
-console.log("hello from ts", answer.value);
-TS`,
-  bash: `bash <<'SH'
-set -euo pipefail
-
-greet() {
-  echo "hello from sh"
-}
-
-greet
-SH`,
-} as const;
+const SAMPLE_COMMANDS = STANDARD_SAMPLE_COMMANDS;
 
 type SampleScenario = keyof typeof SAMPLE_COMMANDS;
 
 const REPRESENTATIVE_HOVER_SYMBOLS: Partial<Record<SampleScenario, string>> = {
   python: "main",
-  bash: "greet",
+  bash: "echo",
 };
 type SymbolInspectionKind =
   | "explain-symbol"

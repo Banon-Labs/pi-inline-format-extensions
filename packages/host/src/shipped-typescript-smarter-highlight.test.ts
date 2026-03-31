@@ -1,21 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { STANDARD_TYPESCRIPT_SAMPLE_COMMAND } from "./demo-samples.js";
 import {
   createHostBashRuntime,
   detectInlineFormatMatches,
   SHIPPED_TYPESCRIPT_SMARTER_HIGHLIGHT_SEGMENTS,
   SHIPPED_TYPESCRIPT_SMARTER_HIGHLIGHT_STYLE_BUCKETS,
 } from "./index.js";
-
-const SHIPPED_TYPESCRIPT_SAMPLE_COMMAND = `npx tsx <<'TS'
-type Answer = {
-  value: number;
-};
-
-const answer: Answer = { value: 42 };
-console.log("hello from ts", answer.value);
-TS`;
 
 const markerTheme = {
   fg: (color: string, text: string) => `<fg:${color}>${text}</fg>`,
@@ -70,7 +62,7 @@ test("pins the shipped TypeScript smarter-highlighted tool-row output", () => {
 
   const rendered = toolDefinition.renderCall(
     {
-      command: SHIPPED_TYPESCRIPT_SAMPLE_COMMAND,
+      command: STANDARD_TYPESCRIPT_SAMPLE_COMMAND,
     },
     markerTheme as never,
     {
@@ -80,7 +72,7 @@ test("pins the shipped TypeScript smarter-highlighted tool-row output", () => {
   ) as { render(width: number): string[] };
 
   const match = detectInlineFormatMatches(
-    SHIPPED_TYPESCRIPT_SAMPLE_COMMAND,
+    STANDARD_TYPESCRIPT_SAMPLE_COMMAND,
   ).find((candidate) => candidate.language === "typescript");
   assert.ok(match, "expected the shipped TypeScript sample to be detected");
 

@@ -1,22 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { STANDARD_PYTHON_SAMPLE_COMMAND } from "./demo-samples.js";
 import {
   createHostBashRuntime,
   detectInlineFormatMatches,
   SHIPPED_PYTHON_SMARTER_HIGHLIGHT_SEGMENTS,
   SHIPPED_PYTHON_SMARTER_HIGHLIGHT_STYLE_BUCKETS,
 } from "./index.js";
-
-const SHIPPED_PYTHON_SAMPLE_COMMAND = `python3 <<'PY'
-#!/usr/bin/env python3
-
-def main() -> None:
-    print("hello from py")
-
-if __name__ == "__main__":
-    main()
-PY`;
 
 const markerTheme = {
   fg: (color: string, text: string) => `<fg:${color}>${text}</fg>`,
@@ -71,7 +62,7 @@ test("pins the shipped Python smarter-highlighted tool-row output", () => {
 
   const rendered = toolDefinition.renderCall(
     {
-      command: SHIPPED_PYTHON_SAMPLE_COMMAND,
+      command: STANDARD_PYTHON_SAMPLE_COMMAND,
     },
     markerTheme as never,
     {
@@ -80,7 +71,7 @@ test("pins the shipped Python smarter-highlighted tool-row output", () => {
     } as never,
   ) as { render(width: number): string[] };
 
-  const match = detectInlineFormatMatches(SHIPPED_PYTHON_SAMPLE_COMMAND).find(
+  const match = detectInlineFormatMatches(STANDARD_PYTHON_SAMPLE_COMMAND).find(
     (candidate) => candidate.language === "python",
   );
   assert.ok(match, "expected the shipped Python sample to be detected");

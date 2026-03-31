@@ -7,17 +7,8 @@ import {
   normalizeInlineFormatSemanticTokens,
 } from "@pi-inline-format/intel";
 
+import { STANDARD_PYTHON_SAMPLE_COMMAND } from "./demo-samples.js";
 import { createHostBashRuntime, detectInlineFormatMatches } from "./index.js";
-
-const SHIPPED_PYTHON_SAMPLE_COMMAND = `python3 <<'PY'
-#!/usr/bin/env python3
-
-def main() -> None:
-    print("hello from py")
-
-if __name__ == "__main__":
-    main()
-PY`;
 
 const markerTheme = {
   fg: (color: string, text: string) => `<fg:${color}>${text}</fg>`,
@@ -33,8 +24,8 @@ function stripAnsi(text: string): string {
 }
 
 test("keeps Python semantic-token inspection truthful and now threads shipped tokens into the normal tool row", async () => {
-  const lines = SHIPPED_PYTHON_SAMPLE_COMMAND.split("\n");
-  const match = detectInlineFormatMatches(SHIPPED_PYTHON_SAMPLE_COMMAND).find(
+  const lines = STANDARD_PYTHON_SAMPLE_COMMAND.split("\n");
+  const match = detectInlineFormatMatches(STANDARD_PYTHON_SAMPLE_COMMAND).find(
     (candidate) => candidate.language === "python",
   );
   assert.ok(match, "expected the shipped Python sample to be detected");
@@ -42,7 +33,7 @@ test("keeps Python semantic-token inspection truthful and now threads shipped to
   const document = createInlineFormatVirtualDocument({
     language: "python",
     match,
-    command: SHIPPED_PYTHON_SAMPLE_COMMAND,
+    command: STANDARD_PYTHON_SAMPLE_COMMAND,
     source: lines
       .slice(match.startLineIndex, match.endLineIndex + 1)
       .join("\n"),
@@ -91,7 +82,7 @@ test("keeps Python semantic-token inspection truthful and now threads shipped to
 
   const rendered = toolDefinition.renderCall(
     {
-      command: SHIPPED_PYTHON_SAMPLE_COMMAND,
+      command: STANDARD_PYTHON_SAMPLE_COMMAND,
     },
     markerTheme as never,
     {

@@ -3,42 +3,24 @@ import { writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import {
+  DEMO_LANGUAGE_ORDER,
+  DEMO_SAMPLE_VARIANTS,
+  DEMO_VARIANT_ORDER,
+  type DemoLanguage,
+  type DemoSample,
+  type DemoVariant,
+} from "../packages/host/src/demo-samples.js";
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "..");
 
-const scenarios = [
-  {
-    key: "python",
-    label: "Python",
-    model: "inline-deterministic/canonical-heredoc-compare",
-    prompt:
-      "Use bash to run python from a heredoc with python3. Keep the transcript inline and normal.",
-  },
-  {
-    key: "javascript",
-    label: "JavaScript",
-    model: "inline-deterministic/javascript-heredoc-compare",
-    prompt:
-      "Use bash to run javascript from a heredoc with node. Keep the transcript inline and normal.",
-  },
-  {
-    key: "typescript",
-    label: "TypeScript",
-    model: "inline-deterministic/typescript-heredoc-compare",
-    prompt:
-      "Use bash to run typescript from a heredoc with npx tsx. Keep the transcript inline and normal.",
-  },
-  {
-    key: "bash",
-    label: "Bash",
-    model: "inline-deterministic/bash-heredoc-compare",
-    prompt:
-      "Use bash to run shell from a heredoc with bash. Keep the transcript inline and normal.",
-  },
-];
+const scenarios = DEMO_LANGUAGE_ORDER.flatMap((language) =>
+  DEMO_VARIANT_ORDER.map((variant) => DEMO_SAMPLE_VARIANTS[language][variant]),
+);
 
-function run(command) {
+function run(command: string): string {
   return execSync(command, {
     cwd: repoRoot,
     encoding: "utf8",
@@ -46,11 +28,11 @@ function run(command) {
   });
 }
 
-function shellEscape(value) {
+function shellEscape(value: string): string {
   return `'${value.replaceAll("'", `'\\''`)}'`;
 }
 
-function captureScenario(scenario) {
+function captureScenario(scenario: DemoSample): string {
   const session = `pi-pages-${scenario.key}-${process.pid}-${Date.now()}`;
   const cmd = [
     "pi",
@@ -58,7 +40,7 @@ function captureScenario(scenario) {
     "--extension",
     "./packages/host/extensions/index.ts",
     "--model",
-    scenario.model,
+    `inline-deterministic/${scenario.model}`,
     shellEscape(scenario.prompt),
   ].join(" ");
 
@@ -70,7 +52,7 @@ function captureScenario(scenario) {
     const paneId = run(
       `tmux list-panes -t ${shellEscape(session)} -F '#{pane_id}'`,
     ).trim();
-    return run(`tmux capture-pane -p -e -S -220 -t ${shellEscape(paneId)}`);
+    return run(`tmux capture-pane -p -e -S -420 -t ${shellEscape(paneId)}`);
   } finally {
     try {
       run(`tmux kill-session -t ${shellEscape(session)}`);
@@ -80,7 +62,7 @@ function captureScenario(scenario) {
   }
 }
 
-function extractBody(capture, prompt) {
+function extractBody(capture: string, prompt: string): string {
   const startIndex = capture.indexOf(prompt);
   if (startIndex < 0) {
     throw new Error(`Prompt not found in capture: ${prompt}`);
@@ -95,7 +77,7 @@ function extractBody(capture, prompt) {
   return capture.slice(regionStart + 1, regionEnd).trimEnd();
 }
 
-function escapeHtml(value) {
+function escapeHtml(value: string): string {
   return value
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
@@ -103,7 +85,7 @@ function escapeHtml(value) {
     .replaceAll('"', "&quot;");
 }
 
-function xterm256ToRgb(code) {
+function xterm256ToRgb(code: number): string {
   const basic = [
     [0, 0, 0],
     [128, 0, 0],
@@ -121,7 +103,7 @@ function xterm256ToRgb(code) {
     [255, 0, 255],
     [0, 255, 255],
     [255, 255, 255],
-  ];
+  ] as const;
 
   if (code < 16) {
     const [r, g, b] = basic[code] ?? [255, 255, 255];
@@ -141,7 +123,7 @@ function xterm256ToRgb(code) {
   return `rgb(${scale[r]}, ${scale[g]}, ${scale[b]})`;
 }
 
-function ansiToHtml(input) {
+function ansiToHtml(input: string): string {
   let index = 0;
   let html = "";
   let open = false;
@@ -149,12 +131,12 @@ function ansiToHtml(input) {
     bold: false,
     italic: false,
     underline: false,
-    fg: null,
-    bg: null,
+    fg: null as string | null,
+    bg: null as string | null,
   };
 
-  function styleString() {
-    const styles = [];
+  function styleString(): string {
+    const styles: string[] = [];
     if (state.bold) styles.push("font-weight:700");
     if (state.italic) styles.push("font-style:italic");
     if (state.underline) styles.push("text-decoration:underline");
@@ -163,7 +145,7 @@ function ansiToHtml(input) {
     return styles.join(";");
   }
 
-  function reopen() {
+  function reopen(): void {
     if (open) {
       html += "</span>";
       open = false;
@@ -175,7 +157,7 @@ function ansiToHtml(input) {
     }
   }
 
-  function handleCodes(rawCodes) {
+  function handleCodes(rawCodes: number[]): void {
     const codes = rawCodes.length === 0 ? [0] : rawCodes;
     for (let i = 0; i < codes.length; i += 1) {
       const code = codes[i];
@@ -265,17 +247,55 @@ const captures = scenarios.map((scenario) => ({
   body: ansiToHtml(extractBody(captureScenario(scenario), scenario.prompt)),
 }));
 
-const cards = captures
-  .map(
-    (scenario) => `<section class="example">
-      <div class="example-header">
-        <strong>${scenario.label}</strong>
+const capturesByLanguage = Object.fromEntries(
+  DEMO_LANGUAGE_ORDER.map((language) => [
+    language,
+    Object.fromEntries(
+      DEMO_VARIANT_ORDER.map((variant) => [
+        variant,
+        captures.find(
+          (capture) =>
+            capture.language === language && capture.variant === variant,
+        )!,
+      ]),
+    ) as Record<DemoVariant, (typeof captures)[number]>,
+  ]),
+) as Record<DemoLanguage, Record<DemoVariant, (typeof captures)[number]>>;
+
+function renderLanguageCard(language: DemoLanguage): string {
+  const variants = capturesByLanguage[language];
+  const label = variants.standard.label;
+  const panels = DEMO_VARIANT_ORDER.map((variant) => {
+    const sample = variants[variant];
+    const hidden = variant === "standard" ? "" : ' hidden="hidden"';
+    return `<section class="variant-panel${variant === "standard" ? " is-active" : ""}" data-variant="${variant}"${hidden}>
+      <div class="variant-meta">
+        <strong>${sample.variantLabel} example</strong>
+        <span>actual ANSI capture from Pi · source: repo sample + deterministic compare path</span>
+      </div>
+      <pre>${sample.body}</pre>
+    </section>`;
+  }).join("\n");
+
+  return `<section class="example" data-language="${language}">
+    <div class="example-header">
+      <div class="example-title">
+        <strong>${label}</strong>
         <span>actual ANSI capture from Pi</span>
       </div>
-      <pre>${scenario.body}</pre>
-    </section>`,
-  )
-  .join("\n");
+      <label class="variant-picker">
+        <span>Example</span>
+        <select data-variant-select>
+          <option value="standard">Standard</option>
+          <option value="verbose">Verbose</option>
+        </select>
+      </label>
+    </div>
+    ${panels}
+  </section>`;
+}
+
+const cards = DEMO_LANGUAGE_ORDER.map(renderLanguageCard).join("\n");
 
 const html = `<!doctype html>
 <html lang="en">
@@ -300,7 +320,7 @@ const html = `<!doctype html>
         background: radial-gradient(circle at top, #16223f 0%, #0a0f1d 55%);
         color: var(--text);
       }
-      main { max-width: 1280px; margin: 0 auto; padding: 56px 20px 80px; }
+      main { max-width: 1400px; margin: 0 auto; padding: 56px 20px 80px; }
       .eyebrow {
         color: var(--accent);
         font-size: 0.88rem;
@@ -309,7 +329,7 @@ const html = `<!doctype html>
         text-transform: uppercase;
       }
       h1 { margin: 10px 0 14px; font-size: clamp(2.3rem, 5vw, 4rem); line-height: 1.05; }
-      .lead { max-width: 80ch; color: var(--muted); line-height: 1.75; font-size: 1.06rem; }
+      .lead { max-width: 90ch; color: var(--muted); line-height: 1.75; font-size: 1.06rem; }
       .badge-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
       .badge {
         padding: 8px 12px;
@@ -327,7 +347,8 @@ const html = `<!doctype html>
         overflow: hidden;
         box-shadow: 0 22px 64px rgba(0, 0, 0, 0.28);
       }
-      .pi-topbar, .pi-statusbar {
+      .pi-topbar,
+      .pi-statusbar {
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -363,10 +384,11 @@ const html = `<!doctype html>
       .pi-body { padding: 20px; }
       .examples {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
         gap: 16px;
       }
-      .example, .card {
+      .example,
+      .card {
         background: rgba(17, 26, 48, 0.92);
         border: 1px solid rgba(255,255,255,0.08);
         border-radius: 16px;
@@ -375,13 +397,45 @@ const html = `<!doctype html>
       .example-header {
         display: flex;
         justify-content: space-between;
+        align-items: flex-start;
         gap: 12px;
         padding: 12px 14px;
         border-bottom: 1px solid rgba(255,255,255,0.08);
         font-size: 0.92rem;
       }
-      .example-header strong { color: var(--text); }
-      .example-header span { color: var(--muted); }
+      .example-title {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .example-title strong { color: var(--text); }
+      .example-title span { color: var(--muted); }
+      .variant-picker {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        color: var(--muted);
+      }
+      .variant-picker select {
+        min-width: 130px;
+        padding: 8px 10px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: rgba(255,255,255,0.05);
+        color: var(--text);
+      }
+      .variant-panel[hidden] { display: none; }
+      .variant-meta {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 14px;
+        background: rgba(255,255,255,0.03);
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+        font-size: 0.86rem;
+      }
+      .variant-meta strong { color: var(--text); }
+      .variant-meta span { color: var(--muted); }
       pre {
         margin: 0;
         padding: 14px;
@@ -389,7 +443,8 @@ const html = `<!doctype html>
         overflow: auto;
         white-space: pre-wrap;
         word-break: break-word;
-        font-size: 0.92rem;
+        max-height: 38rem;
+        font-size: 0.9rem;
         line-height: 1.5;
         color: var(--text);
         font-family: "SFMono-Regular", ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
@@ -397,7 +452,7 @@ const html = `<!doctype html>
       .links {
         margin-top: 24px;
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
         gap: 18px;
       }
       .card {
@@ -409,18 +464,28 @@ const html = `<!doctype html>
       p, li { color: var(--muted); line-height: 1.75; }
       a { color: var(--accent); }
       ul { padding-left: 20px; }
+      @media (max-width: 760px) {
+        .example-header,
+        .variant-meta,
+        .pi-topbar,
+        .pi-statusbar {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }
     </style>
   </head>
   <body>
     <main>
       <div class="eyebrow">GitHub Pages demo surface</div>
-      <h1>Actual ANSI captures from Pi for all four shipped inline-format examples</h1>
+      <h1>Actual ANSI captures from Pi for standard and verbose inline-format examples across all four shipped languages</h1>
       <p class="lead">
-        This page is built from actual ANSI captures of Pi rendering the deterministic shipped samples for Python, JavaScript, TypeScript, and Bash. It is still a demo surface only: authoritative proof remains the repo-local regressions, the full validation sweep, and tmux smoke evidence.
+        This page is built from actual ANSI captures of Pi rendering deterministic shipped samples for Python, JavaScript, TypeScript, and Bash. Each language includes the current standard example plus a longer verbose variant selectable from a dropdown. It remains a demo surface only: authoritative proof stays in repo-local regressions, validation runs, and tmux smoke evidence.
       </p>
       <div class="badge-row">
         <div class="badge">Actual ANSI capture</div>
-        <div class="badge">4 shipped language examples</div>
+        <div class="badge">4 shipped languages</div>
+        <div class="badge">2 variants per language</div>
         <div class="badge">Presentation, not proof</div>
       </div>
 
@@ -437,11 +502,12 @@ const html = `<!doctype html>
         </div>
         <div class="pi-caption">
           <p>
-            Caption: every transcript panel above is derived from an actual ANSI capture collected from Pi running in tmux; the outer page frame is presentation chrome, not a literal full-screen Pi screenshot. Method sources:
+            Caption: every transcript variant above is derived from an actual ANSI capture collected from Pi running in tmux; the outer page frame is presentation chrome, not a literal full-screen Pi screenshot. Method sources:
             <span class="pi-caption-links">
-              <a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/scripts/build-pages-demo.mjs">capture + ANSI-to-HTML generator</a>,
-              <a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/src/runtime.ts">deterministic scenario definitions</a>,
-              <a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/extensions/index.ts">sample command sources</a>,
+              <a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/scripts/build-pages-demo.ts">capture + ANSI-to-HTML generator</a>,
+              <a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/src/demo-samples.ts">standard + verbose sample source definitions</a>,
+              <a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/src/runtime.ts">deterministic scenario registration</a>,
+              <a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/extensions/index.ts">extension sample command usage</a>,
               <a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/.github/workflows/pages.yml">Pages publish workflow</a>
             </span>
           </p>
@@ -462,14 +528,39 @@ const html = `<!doctype html>
         <article class="card">
           <h2>Capture generation sources</h2>
           <ul>
-            <li><a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/scripts/build-pages-demo.mjs">scripts/build-pages-demo.mjs</a> — launches Pi in tmux, captures ANSI output, and converts SGR styling into HTML spans</li>
-            <li><a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/src/runtime.ts">packages/host/src/runtime.ts</a> — deterministic scenario prompts and representative bash commands</li>
-            <li><a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/extensions/index.ts">packages/host/extensions/index.ts</a> — sample command sources exposed in the extension</li>
+            <li><a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/scripts/build-pages-demo.ts">scripts/build-pages-demo.ts</a> — launches Pi in tmux, captures ANSI output, groups standard/verbose variants, and converts SGR styling into HTML spans</li>
+            <li><a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/src/demo-samples.ts">packages/host/src/demo-samples.ts</a> — repo-grounded standard and verbose examples for Python, JavaScript, TypeScript, and Bash</li>
+            <li><a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/src/runtime.ts">packages/host/src/runtime.ts</a> — deterministic compare registration for the page capture models</li>
             <li><a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/.github/workflows/pages.yml">.github/workflows/pages.yml</a> — GitHub Pages publish path</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h2>Verbose example reference influences</h2>
+          <ul>
+            <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Grammar_and_types">MDN JavaScript grammar and types</a> plus related MDN material on template literals, destructuring, and regular expressions</li>
+            <li><a href="https://www.typescriptlang.org/docs/handbook/2/template-literal-types.html">TypeScript handbook template literal types</a> and related handbook sections on unions and literal types</li>
+            <li><a href="https://www.gnu.org/software/bash/manual/html_node/Arrays.html">GNU Bash arrays</a> and <a href="https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html">parameter expansion</a> reference material</li>
+            <li>The verbose Python variant is adapted from the provided syntax-heavy corpus and normalized into a runnable inline heredoc sample</li>
           </ul>
         </article>
       </section>
     </main>
+    <script>
+      for (const example of document.querySelectorAll('[data-language]')) {
+        const select = example.querySelector('[data-variant-select]');
+        const panels = example.querySelectorAll('.variant-panel');
+        if (!(select instanceof HTMLSelectElement)) continue;
+        const update = () => {
+          for (const panel of panels) {
+            const active = panel.getAttribute('data-variant') === select.value;
+            panel.toggleAttribute('hidden', !active);
+            panel.classList.toggle('is-active', active);
+          }
+        };
+        select.addEventListener('change', update);
+        update();
+      }
+    </script>
   </body>
 </html>`;
 

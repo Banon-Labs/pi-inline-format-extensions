@@ -1,6 +1,6 @@
 export const SHIPPED_JAVASCRIPT_SMARTER_HIGHLIGHT_SEGMENTS = [
   ["const ", "value", " = 42;"],
-  ["console", ".", "log", "(", "value", ");"],
+  ["console", ".", "log", '("hello from js", ', "value", ");"],
 ] as const;
 
 export const SHIPPED_JAVASCRIPT_SMARTER_HIGHLIGHT_STYLE_BUCKETS = [

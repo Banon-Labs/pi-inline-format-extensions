@@ -1,17 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { STANDARD_BASH_SAMPLE_COMMAND } from "./demo-samples.js";
 import {
   createHostBashRuntime,
   detectInlineFormatMatches,
   SHIPPED_BASH_SMARTER_HIGHLIGHT_SEGMENTS,
   SHIPPED_BASH_SMARTER_HIGHLIGHT_STYLE_BUCKETS,
 } from "./index.js";
-
-const SHIPPED_BASH_SAMPLE_COMMAND = `bash <<'SH'
-set -euo pipefail
-echo "hello from sh"
-SH`;
 
 const markerTheme = {
   fg: (color: string, text: string) => `<fg:${color}>${text}</fg>`,
@@ -66,7 +62,7 @@ test("pins the shipped Bash smarter-highlighted tool-row output", () => {
 
   const rendered = toolDefinition.renderCall(
     {
-      command: SHIPPED_BASH_SAMPLE_COMMAND,
+      command: STANDARD_BASH_SAMPLE_COMMAND,
     },
     markerTheme as never,
     {
@@ -75,7 +71,7 @@ test("pins the shipped Bash smarter-highlighted tool-row output", () => {
     } as never,
   ) as { render(width: number): string[] };
 
-  const match = detectInlineFormatMatches(SHIPPED_BASH_SAMPLE_COMMAND).find(
+  const match = detectInlineFormatMatches(STANDARD_BASH_SAMPLE_COMMAND).find(
     (candidate) => candidate.language === "bash",
   );
   assert.ok(match, "expected the shipped Bash sample to be detected");

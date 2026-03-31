@@ -3,37 +3,35 @@ import test from "node:test";
 
 import { createInlineFormatVirtualDocument } from "@pi-inline-format/intel";
 
+import {
+  STANDARD_PYTHON_SAMPLE_COMMAND,
+  VERBOSE_PYTHON_SAMPLE_COMMAND,
+} from "./demo-samples.js";
 import { detectInlineFormatMatches } from "./index.js";
 import { collectHostPythonSmarterHighlightTokens } from "./python-smarter-highlight.js";
 
-const SHIPPED_PYTHON_SAMPLE_COMMAND = `python3 <<'PY'
-#!/usr/bin/env python3
-
-def main() -> None:
-    print("hello from py")
-
-if __name__ == "__main__":
-    main()
-PY`;
-
-test("collects bounded Python semantic tokens for the shipped inline sample source", () => {
-  const lines = SHIPPED_PYTHON_SAMPLE_COMMAND.split("\n");
-  const match = detectInlineFormatMatches(SHIPPED_PYTHON_SAMPLE_COMMAND).find(
+function createDocument(command: string) {
+  const lines = command.split("\n");
+  const match = detectInlineFormatMatches(command).find(
     (candidate) => candidate.language === "python",
   );
-  assert.ok(match, "expected the shipped Python sample to be detected");
+  assert.ok(match, "expected the Python sample to be detected");
 
-  const document = createInlineFormatVirtualDocument({
+  return createInlineFormatVirtualDocument({
     language: "python",
     match,
-    command: SHIPPED_PYTHON_SAMPLE_COMMAND,
+    command,
     source: lines
       .slice(match.startLineIndex, match.endLineIndex + 1)
       .join("\n"),
   });
+}
 
+test("collects bounded Python semantic tokens for the shipped standard inline sample source", () => {
   assert.deepStrictEqual(
-    collectHostPythonSmarterHighlightTokens(document).map((token) => ({
+    collectHostPythonSmarterHighlightTokens(
+      createDocument(STANDARD_PYTHON_SAMPLE_COMMAND),
+    ).map((token) => ({
       text: token.text,
       tokenType: token.tokenType,
       modifiers: token.modifiers,
@@ -53,25 +51,69 @@ test("collects bounded Python semantic tokens for the shipped inline sample sour
   );
 });
 
-test("returns no Python tokens outside the bounded shipped inline sample source", () => {
-  const lines = SHIPPED_PYTHON_SAMPLE_COMMAND.split("\n");
-  const match = detectInlineFormatMatches(SHIPPED_PYTHON_SAMPLE_COMMAND).find(
-    (candidate) => candidate.language === "python",
-  );
-  assert.ok(match, "expected the shipped Python sample to be detected");
+test("collects bounded Python semantic tokens for the shipped verbose inline sample source", () => {
+  const tokens = collectHostPythonSmarterHighlightTokens(
+    createDocument(VERBOSE_PYTHON_SAMPLE_COMMAND),
+  ).map((token) => ({
+    text: token.text,
+    tokenType: token.tokenType,
+    modifiers: token.modifiers,
+  }));
 
-  const document = createInlineFormatVirtualDocument({
-    language: "python",
-    match,
-    command: SHIPPED_PYTHON_SAMPLE_COMMAND.replace(
-      "hello from py",
-      "goodbye from py",
+  assert.deepStrictEqual(tokens.slice(0, 6), [
+    {
+      text: "simple",
+      tokenType: "function",
+      modifiers: ["declaration"],
+    },
+    {
+      text: "posonly",
+      tokenType: "function",
+      modifiers: ["declaration"],
+    },
+    {
+      text: "with_annotations",
+      tokenType: "function",
+      modifiers: ["declaration"],
+    },
+    {
+      text: "generator",
+      tokenType: "function",
+      modifiers: ["declaration"],
+    },
+    {
+      text: "decorator",
+      tokenType: "function",
+      modifiers: ["declaration"],
+    },
+    {
+      text: "deco_factory",
+      tokenType: "function",
+      modifiers: ["declaration"],
+    },
+  ]);
+  assert.ok(
+    tokens.some(
+      (token) =>
+        token.text === "main" && token.modifiers.includes("declaration"),
     ),
-    source: lines
-      .slice(match.startLineIndex, match.endLineIndex + 1)
-      .join("\n")
-      .replace("hello from py", "goodbye from py"),
-  });
+  );
+  assert.ok(
+    tokens.some(
+      (token) =>
+        token.text === "print" &&
+        token.modifiers.includes("defaultLibrary") &&
+        token.modifiers.includes("builtin"),
+    ),
+  );
+});
+
+test("returns no Python tokens outside the bounded shipped inline sample sources", () => {
+  const command = STANDARD_PYTHON_SAMPLE_COMMAND.replace(
+    "hello from py",
+    "goodbye from py",
+  );
+  const document = createDocument(command);
 
   assert.deepStrictEqual(collectHostPythonSmarterHighlightTokens(document), []);
 });

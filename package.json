@@ -16,6 +16,7 @@
     ]
   },
   "scripts": {
+    "build:pages-demo": "tsx scripts/build-pages-demo.ts",
     "check": "npm run format && npm run typecheck",
     "format": "prettier --check .",
     "format:write": "prettier --write .",
