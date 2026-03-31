@@ -9,6 +9,7 @@ import type {
 import {
   collectNormalizedPythonSemanticTokensBoundaryPayload,
   collectPythonSemanticTokensBoundaryPayload,
+  collectPythonSemanticTokensRenderHandoffPayload,
   collectPythonSemanticTokensRenderSlicePayload,
   createPythonSemanticTokensBoundaryContext,
 } from "./index.js";
@@ -149,6 +150,27 @@ test("assembles the exact Python source-line slice beside normalized tokens", as
   );
 
   assert.ok(collected);
+  assert.deepStrictEqual(collected.sourceLines, [
+    "#!/usr/bin/env python3",
+    "",
+    "def main() -> None:",
+    '    print("hello")',
+  ]);
+  assert.deepStrictEqual(
+    collected.tokens.map((token) => token.text),
+    ["main", "print"],
+  );
+});
+
+test("assembles the remaining non-token Python render handoff arguments", async () => {
+  const collected = await collectPythonSemanticTokensRenderHandoffPayload(
+    SHIPPED_PYTHON_SAMPLE_COMMAND,
+    async () => SHIPPED_PYTHON_SEMANTIC_TOKENS_RESULT,
+    "/repo",
+  );
+
+  assert.ok(collected);
+  assert.equal(collected.language, "python");
   assert.deepStrictEqual(collected.sourceLines, [
     "#!/usr/bin/env python3",
     "",

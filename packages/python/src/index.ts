@@ -36,6 +36,10 @@ export interface PythonSemanticTokensRenderSlicePayload extends PythonNormalized
   sourceLines: string[];
 }
 
+export interface PythonSemanticTokensRenderHandoffPayload extends PythonSemanticTokensRenderSlicePayload {
+  language: "python";
+}
+
 export type PythonSemanticTokensInspector = (
   document: InlineFormatVirtualDocument,
   kind: "semantic-tokens",
@@ -216,6 +220,27 @@ export async function collectPythonSemanticTokensRenderSlicePayload(
   return {
     ...collected,
     sourceLines: collected.context.source.split("\n"),
+  };
+}
+
+export async function collectPythonSemanticTokensRenderHandoffPayload(
+  command: string,
+  inspect: PythonSemanticTokensInspector,
+  projectRoot: string = process.cwd(),
+): Promise<PythonSemanticTokensRenderHandoffPayload | null> {
+  const collected = await collectPythonSemanticTokensRenderSlicePayload(
+    command,
+    inspect,
+    projectRoot,
+  );
+
+  if (collected === null) {
+    return null;
+  }
+
+  return {
+    ...collected,
+    language: "python",
   };
 }
 
