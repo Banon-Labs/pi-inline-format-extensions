@@ -518,6 +518,27 @@ function supportsSuppliedSemanticTokenRendering(
   );
 }
 
+function bucketSemanticTokensByLine(
+  semanticTokens: readonly InlineFormatSemanticToken[],
+): ReadonlyMap<number, readonly InlineFormatSemanticToken[]> {
+  const tokensByLine = new Map<number, InlineFormatSemanticToken[]>();
+
+  for (const token of semanticTokens) {
+    const lineTokens = tokensByLine.get(token.range.start.lineIndex) ?? [];
+    lineTokens.push(token);
+    tokensByLine.set(token.range.start.lineIndex, lineTokens);
+  }
+
+  for (const lineTokens of tokensByLine.values()) {
+    lineTokens.sort(
+      (left, right) =>
+        left.range.start.columnIndex - right.range.start.columnIndex,
+    );
+  }
+
+  return tokensByLine;
+}
+
 function renderSemanticallyHighlightedScriptLinesFromTokens(
   language: InlineFormatMatch["language"],
   sourceLines: readonly string[],
@@ -532,7 +553,6 @@ function renderSemanticallyHighlightedScriptLinesFromTokens(
     return null;
   }
 
-  const tokensByLine = new Map<number, InlineFormatSemanticToken[]>();
   for (const token of semanticTokens) {
     if (
       shouldFallbackForCrossLineSemanticToken(
@@ -542,17 +562,12 @@ function renderSemanticallyHighlightedScriptLinesFromTokens(
     ) {
       return null;
     }
-
-    const lineTokens = tokensByLine.get(token.range.start.lineIndex) ?? [];
-    lineTokens.push(token);
-    tokensByLine.set(token.range.start.lineIndex, lineTokens);
   }
 
+  const tokensByLine = bucketSemanticTokensByLine(semanticTokens);
+
   return sourceLines.map((line, lineIndex) => {
-    const lineTokens = [...(tokensByLine.get(lineIndex) ?? [])].sort(
-      (left, right) =>
-        left.range.start.columnIndex - right.range.start.columnIndex,
-    );
+    const lineTokens = tokensByLine.get(lineIndex) ?? [];
 
     if (lineTokens.length === 0) {
       return highlightInlineSegment(line, language);
