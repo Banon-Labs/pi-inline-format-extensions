@@ -460,10 +460,15 @@ function highlightInlineSegment(segment: string, language: string): string {
   return highlightCodeWithRenderTheme(segment, language)[0] ?? segment;
 }
 
+type InlineSemanticRenderTheme = Pick<
+  Theme,
+  "fg" | "bold" | "italic" | "underline"
+>;
+
 function styleSemanticTokenText(
   token: InlineFormatSemanticToken,
   text: string,
-  theme: Pick<Theme, "fg" | "bold" | "italic" | "underline">,
+  theme: InlineSemanticRenderTheme,
 ): string {
   let styled = text;
 
@@ -482,31 +487,49 @@ function styleSemanticTokenText(
   return theme.fg(getSemanticTokenThemeColor(token), styled);
 }
 
-function renderSemanticallyHighlightedScriptLines(
-  command: string,
-  match: InlineFormatMatch,
+function shouldFallbackForOutOfOrderSemanticTokenRange(
+  start: number,
+  end: number,
+): boolean {
+  return end < start;
+}
+
+function shouldFallbackForOverlappingSemanticTokenRange(
+  start: number,
+  cursor: number,
+): boolean {
+  return start < cursor;
+}
+
+function shouldFallbackForCrossLineSemanticToken(
+  startLineIndex: number,
+  endLineIndex: number,
+): boolean {
+  return startLineIndex !== endLineIndex;
+}
+
+function renderSemanticallyHighlightedScriptLinesFromTokens(
+  language: InlineFormatMatch["language"],
   sourceLines: readonly string[],
-  theme: Pick<Theme, "fg" | "bold" | "italic" | "underline">,
+  semanticTokens: readonly InlineFormatSemanticToken[],
+  theme: InlineSemanticRenderTheme,
 ): string[] | null {
-  if (match.language !== "javascript" && match.language !== "typescript") {
+  if (language !== "javascript" && language !== "typescript") {
     return null;
   }
 
-  const region = createInlineFormatRegionReference(command, match.language);
-  if (region === null) {
-    return null;
-  }
-
-  const semanticTokens = collectInlineFormatSemanticTokens(
-    createInlineFormatVirtualDocument(region),
-  );
   if (semanticTokens.length === 0) {
     return null;
   }
 
   const tokensByLine = new Map<number, InlineFormatSemanticToken[]>();
   for (const token of semanticTokens) {
-    if (token.range.start.lineIndex !== token.range.end.lineIndex) {
+    if (
+      shouldFallbackForCrossLineSemanticToken(
+        token.range.start.lineIndex,
+        token.range.end.lineIndex,
+      )
+    ) {
       return null;
     }
 
@@ -522,7 +545,7 @@ function renderSemanticallyHighlightedScriptLines(
     );
 
     if (lineTokens.length === 0) {
-      return highlightInlineSegment(line, match.language);
+      return highlightInlineSegment(line, language);
     }
 
     let cursor = 0;
@@ -532,28 +555,68 @@ function renderSemanticallyHighlightedScriptLines(
       const start = token.range.start.columnIndex;
       const end = token.range.end.columnIndex;
 
-      if (start < cursor || end < start) {
-        return highlightInlineSegment(line, match.language);
+      if (
+        shouldFallbackForOverlappingSemanticTokenRange(start, cursor) ||
+        shouldFallbackForOutOfOrderSemanticTokenRange(start, end)
+      ) {
+        return highlightInlineSegment(line, language);
       }
 
       renderedSegments.push(
-        highlightInlineSegment(line.slice(cursor, start), match.language),
+        highlightInlineSegment(line.slice(cursor, start), language),
       );
       renderedSegments.push(
         styleSemanticTokenText(
           token,
-          highlightInlineSegment(line.slice(start, end), match.language),
+          highlightInlineSegment(line.slice(start, end), language),
           theme,
         ),
       );
       cursor = end;
     }
 
-    renderedSegments.push(
-      highlightInlineSegment(line.slice(cursor), match.language),
-    );
+    renderedSegments.push(highlightInlineSegment(line.slice(cursor), language));
     return renderedSegments.join("");
   });
+}
+
+export function renderSemanticallyHighlightedScriptLinesWithSuppliedTokens(
+  language: InlineFormatMatch["language"],
+  sourceLines: readonly string[],
+  semanticTokens: readonly InlineFormatSemanticToken[],
+  theme: InlineSemanticRenderTheme,
+): string[] | null {
+  return renderSemanticallyHighlightedScriptLinesFromTokens(
+    language,
+    sourceLines,
+    semanticTokens,
+    theme,
+  );
+}
+
+function renderSemanticallyHighlightedScriptLines(
+  command: string,
+  match: InlineFormatMatch,
+  sourceLines: readonly string[],
+  theme: InlineSemanticRenderTheme,
+): string[] | null {
+  if (match.language !== "javascript" && match.language !== "typescript") {
+    return null;
+  }
+
+  const region = createInlineFormatRegionReference(command, match.language);
+  if (region === null) {
+    return null;
+  }
+
+  return renderSemanticallyHighlightedScriptLinesFromTokens(
+    match.language,
+    sourceLines,
+    collectInlineFormatSemanticTokens(
+      createInlineFormatVirtualDocument(region),
+    ),
+    theme,
+  );
 }
 
 function renderInlineHighlightedBashCall(

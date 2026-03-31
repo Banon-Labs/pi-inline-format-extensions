@@ -20,6 +20,7 @@ export {
   inspectInlineFormatCommand,
   registerDeterministicProvider,
   registerHostRuntimeSeams,
+  renderSemanticallyHighlightedScriptLinesWithSuppliedTokens,
   sortInlineFormatMatches,
   sortInlineFormatPlugins,
   validateCanonicalPythonHeredocParity,
