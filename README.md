@@ -115,91 +115,21 @@ This repo is the source of truth for the package-backed capabilities shipped by 
 - Bash now participates in smarter tool-row highlighting through a host-owned Bash token/span collector in `packages/host`.
 - The Bash inspection backend still does **not** advertise semantic-token payloads, so `/inline-format-semantic-tokens bash` remains intentionally unavailable even though normal tool-row smarter highlighting is now shipped.
 
-## Representative interaction visuals
+## Demo and proof links
 
-These are **transcript-style visuals** captured from the actual sample commands shipped by `packages/host/extensions/index.ts`. They show what the parent `pi-inline-format` extension can surface after loading this package, without pretending that README screenshots are live UI.
+For richer walkthrough material, transcript-style visuals, and the published GitHub Pages presentation, use:
 
-### Hover / inspect sample
+- GitHub Pages demo: https://banon-labs.github.io/pi-inline-format-extensions/
+- Focused shipped-Python regression proof: `packages/host/src/shipped-python-smarter-highlight.test.ts`
+- Inspection-vs-tool-row proof: `packages/host/src/shipped-python-tool-row.test.ts`
+- Truthful shipped-Python baseline data: `packages/host/src/shipped-python-smarter-highlight-baseline.ts`
+- Parent CLI-app tmux smoke evidence: `bd comments pi-inline-format-extensions-d3a.7`
 
-```text
-/inline-format-inspect-sample typescript
-Backend: inline-format-typescript-language-service
-Language: typescript
-Kind: hover
-Summary: Resolved hover information via the TypeScript language service. type Answer = {
-    value: number;
-}.
-Ranges: [0:5-0:11]
-Payload: {"quickInfo":"type Answer = {\n    value: number;\n}","filePath":"/tmp/delete.me.ts"}
-```
+README-vs-Pages audit outcome:
 
-### Explain symbol
-
-```text
-/inline-format-explain-symbol python main
-Backend: inline-format-basedpyright
-Language: python
-Kind: explain-symbol
-Summary: Explained symbol main via basedpyright. (function) def main() -> None
-Ranges: [2:4-2:8]
-Payload: {"symbolName":"main","hover":"(function) def main() -> None"}
-```
-
-### Find definition
-
-```text
-/inline-format-find-definition bash greet
-Backend: inline-format-bash-language-server
-Language: bash
-Kind: definition
-Summary: Bash language server resolved 1 definition(s) for greet.
-Ranges: [2:0-4:1]
-Payload: {"symbolName":"greet","definitionCount":1,"sameFileDefinitionCount":1,"definitionFiles":["file:///tmp/pi-inline-format-bash-language-server-<temp>/bash.sh"]}
-```
-
-### Highlight symbol
-
-```text
-/inline-format-highlight-symbol javascript value
-Backend: inline-format-typescript-language-service
-Language: javascript
-Kind: document-highlights
-Summary: TypeScript language service reported 2 document highlight(s) for the selected symbol.
-Ranges: [0:6-0:11], [1:12-1:17]
-Payload: {"symbolName":"value","highlightCount":2,"quickInfo":"const value: 42"}
-```
-
-### Semantic tokens
-
-```text
-/inline-format-semantic-tokens python
-Backend: inline-format-basedpyright
-Language: python
-Kind: semantic-tokens
-Summary: Basedpyright reported 2 semantic token(s) for the current virtual document.
-Ranges: [2:4-2:8], [3:4-3:9]
-Payload: {"tokenCount":2,"tokens":[{"range":{"start":{"lineIndex":2,"columnIndex":4},"end":{"lineIndex":2,"columnIndex":8}},"tokenType":"function","modifiers":["declaration"],"text":"main"},{"range":{"start":{"lineIndex":3,"columnIndex":4},"end":{"lineIndex":3,"columnIndex":9}},"tokenType":"function","modifiers":["defaultLibrary","builtin"],"text":"print"}],"legend":{"tokenTypes":["namespace","type","class","enum","typeParameter","parameter","variable","property","enumMember","function","method","keyword","decorator","selfParameter","clsParameter"],"tokenModifiers":["declaration","definition","readonly","static","async","defaultLibrary","builtin","classMember","parameter"]}}
-```
-
-```text
-/inline-format-semantic-tokens bash
-Backend: inline-format-bash-language-server
-Language: bash
-Kind: semantic-tokens
-Summary: bash-language-server does not advertise semanticTokensProvider, so the prototype backend cannot expose semantic-token payloads for Bash yet.
-```
-
-### Diagnostics
-
-```text
-/inline-format-diagnostics-sample bash
-Backend: inline-format-bash-language-server
-Language: bash
-Kind: diagnostics
-Summary: ShellCheck reported 1 diagnostic(s) for the current virtual document.
-Diagnostics: 1
-Payload: {"diagnosticCount":1,"source":"shellcheck"}
-```
+- README stays focused on architecture, shipped status, install/release expectations, and researched-next-candidate planning.
+- GitHub Pages now owns the richer visual/demo presentation layer for the restored smarter-highlighting story.
+- Repo-local tests plus tmux evidence remain the proof surface; GitHub Pages is linked as a presentation surface only.
 
 ## Researched next candidates
 
