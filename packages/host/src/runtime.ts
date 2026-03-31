@@ -508,13 +508,23 @@ function shouldFallbackForCrossLineSemanticToken(
   return startLineIndex !== endLineIndex;
 }
 
+function supportsSuppliedSemanticTokenRendering(
+  language: InlineFormatMatch["language"],
+): boolean {
+  return (
+    language === "javascript" ||
+    language === "typescript" ||
+    language === "python"
+  );
+}
+
 function renderSemanticallyHighlightedScriptLinesFromTokens(
   language: InlineFormatMatch["language"],
   sourceLines: readonly string[],
   semanticTokens: readonly InlineFormatSemanticToken[],
   theme: InlineSemanticRenderTheme,
 ): string[] | null {
-  if (language !== "javascript" && language !== "typescript") {
+  if (!supportsSuppliedSemanticTokenRendering(language)) {
     return null;
   }
 
@@ -594,13 +604,11 @@ export function renderSemanticallyHighlightedScriptLinesWithSuppliedTokens(
   );
 }
 
-function renderSemanticallyHighlightedScriptLines(
+function collectSuppliedSemanticTokensForMatch(
   command: string,
   match: InlineFormatMatch,
-  sourceLines: readonly string[],
-  theme: InlineSemanticRenderTheme,
-): string[] | null {
-  if (match.language !== "javascript" && match.language !== "typescript") {
+): readonly InlineFormatSemanticToken[] | null {
+  if (!supportsSuppliedSemanticTokenRendering(match.language)) {
     return null;
   }
 
@@ -609,13 +617,8 @@ function renderSemanticallyHighlightedScriptLines(
     return null;
   }
 
-  return renderSemanticallyHighlightedScriptLinesFromTokens(
-    match.language,
-    sourceLines,
-    collectInlineFormatSemanticTokens(
-      createInlineFormatVirtualDocument(region),
-    ),
-    theme,
+  return collectInlineFormatSemanticTokens(
+    createInlineFormatVirtualDocument(region),
   );
 }
 
@@ -642,13 +645,20 @@ function renderInlineHighlightedBashCall(
       continue;
     }
 
+    const semanticTokens = collectSuppliedSemanticTokensForMatch(
+      command,
+      match,
+    );
     const highlightedLines =
-      renderSemanticallyHighlightedScriptLines(
-        command,
-        match,
-        sourceLines,
-        theme,
-      ) ?? highlightCodeWithRenderTheme(sourceLines.join("\n"), match.language);
+      (semanticTokens === null
+        ? null
+        : renderSemanticallyHighlightedScriptLinesWithSuppliedTokens(
+            match.language,
+            sourceLines,
+            semanticTokens,
+            theme,
+          )) ??
+      highlightCodeWithRenderTheme(sourceLines.join("\n"), match.language);
 
     sourceLines.forEach((line, index) => {
       highlightedByLine.set(
