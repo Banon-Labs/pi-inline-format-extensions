@@ -105,15 +105,15 @@ This repo is the source of truth for the package-backed capabilities shipped by 
 
 | Language     | Detects this heredoc? | Basic highlighting | Inspection backend                                                             | Smarter highlighting in the normal tool row | Status                                                                                  |
 | ------------ | --------------------- | ------------------ | ------------------------------------------------------------------------------ | ------------------------------------------- | --------------------------------------------------------------------------------------- |
-| Python       | ✅                    | ✅                 | ✅ `basedpyright` prototype + semantic-token payloads                          | ❌                                          | supported, richer intel prototype path; semantic tokens not yet wired into the tool row |
+| Python       | ✅                    | ✅                 | ✅ `basedpyright` prototype + semantic-token payloads                          | ✅                                          | supported for the shipped sample; parent CLI-app tmux proof showed smarter-highlighted normal tool-row output |
 | JavaScript   | ✅                    | ✅                 | ✅ TypeScript language service                                                 | ✅                                          | shipped                                                                                 |
 | TypeScript   | ✅                    | ✅                 | ✅ TypeScript language service                                                 | ✅                                          | shipped                                                                                 |
 | Bash / shell | ✅                    | ✅                 | ⚠️ partial (`bash-language-server` + `shellcheck`; no semantic token provider) | ❌                                          | supported, prototype path with explicit parity gap                                      |
 
-We should **not** check off smarter highlighting for Python or Bash yet.
+We should **not** check off smarter highlighting for Bash yet.
 
-- JavaScript and TypeScript are the only languages whose semantic tokens currently feed the normal bash tool-row render path.
-- Python can now expose semantic-token payloads through `/inline-format-semantic-tokens python`, but that data is still inspection-only and does not yet drive the inline renderer.
+- JavaScript, TypeScript, and Python currently feed semantic tokens into the normal bash tool-row render path.
+- Recorded parent CLI-app tmux proof showed the shipped Python sample smarter-highlighted in the normal tool row, including the colored `print("hello from /tmp/delete.me.py")` line.
 - Bash parity investigation result: upstream `bash-language-server` exposes hover, definition, references, and document highlights, but it does **not** advertise LSP `semanticTokensProvider`. In this repo that means Bash can keep the prototype inspection path, but the normal tool-row smarter-highlighting path remains intentionally unavailable unless we add a different host-owned symbol-aware styling seam.
 
 ## Representative interaction visuals
