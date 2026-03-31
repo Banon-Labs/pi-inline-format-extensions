@@ -7,24 +7,16 @@
     <style>
       :root {
         color-scheme: dark;
-        --bg: #0b1020;
-        --panel: #141b33;
-        --panel-border: #27345f;
-        --text: #e9eefb;
-        --muted: #a7b3d4;
+        --bg: #0a0f1d;
+        --panel: #111a30;
+        --border: #2b3a63;
+        --text: #edf2ff;
+        --muted: #9fb0d9;
         --accent: #8be9fd;
-        --accent-2: #ffcc66;
-        --success: #9ece6a;
-        --function: #7dcfff;
-        --keyword: #c792ea;
-        --type: #8bd5ca;
-        --string: #f5a97f;
       }
-
       * {
         box-sizing: border-box;
       }
-
       body {
         margin: 0;
         font-family:
@@ -35,317 +27,323 @@
           BlinkMacSystemFont,
           "Segoe UI",
           sans-serif;
-        background: linear-gradient(180deg, #0b1020 0%, #131a2f 100%);
+        background: radial-gradient(circle at top, #16223f 0%, #0a0f1d 55%);
         color: var(--text);
       }
-
       main {
-        max-width: 1100px;
+        max-width: 1280px;
         margin: 0 auto;
-        padding: 56px 20px 72px;
+        padding: 56px 20px 80px;
       }
-
-      .hero {
-        display: grid;
-        gap: 20px;
-        margin-bottom: 32px;
-      }
-
       .eyebrow {
         color: var(--accent);
         font-size: 0.88rem;
+        font-weight: 700;
         letter-spacing: 0.08em;
         text-transform: uppercase;
-        font-weight: 700;
       }
-
       h1 {
-        margin: 0;
-        font-size: clamp(2.2rem, 5vw, 3.7rem);
+        margin: 10px 0 14px;
+        font-size: clamp(2.3rem, 5vw, 4rem);
         line-height: 1.05;
       }
-
       .lead {
-        max-width: 72ch;
+        max-width: 80ch;
         color: var(--muted);
-        font-size: 1.08rem;
-        line-height: 1.7;
+        line-height: 1.75;
+        font-size: 1.06rem;
       }
-
       .badge-row {
         display: flex;
         flex-wrap: wrap;
-        gap: 12px;
+        gap: 10px;
+        margin-top: 18px;
       }
-
       .badge {
         padding: 8px 12px;
         border-radius: 999px;
-        border: 1px solid var(--panel-border);
+        border: 1px solid var(--border);
         background: rgba(139, 233, 253, 0.08);
         color: var(--text);
-        font-size: 0.95rem;
+        font-size: 0.94rem;
       }
-
-      .grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 20px;
-      }
-
-      .card {
-        background: rgba(20, 27, 51, 0.94);
-        border: 1px solid var(--panel-border);
-        border-radius: 18px;
-        padding: 22px;
-        box-shadow: 0 18px 48px rgba(0, 0, 0, 0.25);
-      }
-
-      .card h2,
-      .card h3 {
-        margin-top: 0;
-      }
-
-      .card p,
-      .card li {
-        color: var(--muted);
-        line-height: 1.7;
-      }
-
-      .proof-list {
-        display: grid;
-        gap: 12px;
-        padding: 0;
-        list-style: none;
-      }
-
-      a {
-        color: var(--accent);
-      }
-
-      .terminal {
-        background: #0d1324;
-        border: 1px solid #29375b;
-        border-radius: 16px;
+      .pi-window {
+        margin-top: 28px;
+        background: rgba(17, 26, 48, 0.92);
+        border: 1px solid var(--border);
+        border-radius: 20px;
         overflow: hidden;
+        box-shadow: 0 22px 64px rgba(0, 0, 0, 0.28);
       }
-
-      .terminal-header {
+      .pi-topbar,
+      .pi-statusbar {
         display: flex;
         align-items: center;
-        gap: 10px;
+        justify-content: space-between;
+        gap: 16px;
         padding: 12px 16px;
-        border-bottom: 1px solid #29375b;
+        background: rgba(255, 255, 255, 0.03);
         color: var(--muted);
-        font-size: 0.95rem;
+        font-size: 0.92rem;
       }
-
+      .pi-topbar {
+        border-bottom: 1px solid var(--border);
+      }
+      .pi-statusbar {
+        border-top: 1px solid var(--border);
+      }
+      .dots {
+        display: flex;
+        gap: 8px;
+      }
       .dot {
         width: 10px;
         height: 10px;
-        border-radius: 50%;
+        border-radius: 999px;
       }
-
-      .dot.red {
+      .red {
         background: #ff5f57;
       }
-
-      .dot.yellow {
+      .yellow {
         background: #ffbd2e;
       }
-
-      .dot.green {
+      .green {
         background: #28c840;
       }
-
+      .pi-body {
+        padding: 20px;
+      }
+      .examples {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 16px;
+      }
+      .example,
+      .card {
+        background: rgba(17, 26, 48, 0.92);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        overflow: hidden;
+      }
+      .example-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 14px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        font-size: 0.92rem;
+      }
+      .example-header strong {
+        color: var(--text);
+      }
+      .example-header span {
+        color: var(--muted);
+      }
       pre {
         margin: 0;
-        padding: 18px;
+        padding: 14px;
         overflow: auto;
-        font-size: 0.95rem;
-        line-height: 1.65;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-size: 0.92rem;
+        line-height: 1.5;
+        color: var(--text);
         font-family:
-          "SFMono-Regular", ui-monospace, "Cascadia Code", "Source Code Pro",
-          Menlo, Consolas, monospace;
+          "SFMono-Regular", ui-monospace, "Cascadia Code", Menlo, Consolas,
+          monospace;
       }
-
-      .prompt {
-        color: var(--accent-2);
-        font-weight: 700;
+      .links {
+        margin-top: 24px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 18px;
       }
-
-      .keyword {
-        color: var(--keyword);
+      .card {
+        padding: 22px;
+        border-color: var(--border);
+        box-shadow: 0 22px 64px rgba(0, 0, 0, 0.28);
       }
-
-      .function {
-        color: var(--function);
+      h2 {
+        margin-top: 0;
       }
-
-      .function.declaration {
-        color: var(--accent-2);
-        font-weight: 700;
-      }
-
-      .builtin {
-        color: var(--function);
-        font-style: italic;
-      }
-
-      .type {
-        color: var(--type);
-      }
-
-      .string {
-        color: var(--string);
-      }
-
-      .muted {
+      p,
+      li {
         color: var(--muted);
+        line-height: 1.75;
       }
-
-      .callout {
-        border-left: 4px solid var(--success);
-        padding-left: 14px;
-        margin-top: 16px;
+      a {
+        color: var(--accent);
       }
-
-      footer {
-        margin-top: 28px;
-        color: var(--muted);
-        font-size: 0.95rem;
+      ul {
+        padding-left: 20px;
       }
     </style>
   </head>
   <body>
     <main>
-      <section class="hero">
-        <div class="eyebrow">GitHub Pages demo surface</div>
-        <h1>pi-inline-format smarter highlighting</h1>
-        <p class="lead">
-          This site is a presentation layer for the restored shipped Python
-          smarter-highlighting flow in
-          <code>Banon-Labs/pi-inline-format-extensions</code>. The source of
-          truth remains the repo-local regression tests, the full validation
-          sweep, and the parent CLI-app tmux smoke evidence.
-        </p>
-        <div class="badge-row">
-          <div class="badge">Demo surface only</div>
-          <div class="badge">Proof lives in repo + tmux evidence</div>
-          <div class="badge">
-            Proven shipped sample: <code>/tmp/delete.me.py</code>
+      <div class="eyebrow">GitHub Pages demo surface</div>
+      <h1>
+        Actual ANSI captures from Pi for all four shipped inline-format examples
+      </h1>
+      <p class="lead">
+        This page is built from actual ANSI captures of Pi rendering the
+        deterministic shipped samples for Python, JavaScript, TypeScript, and
+        Bash. It is still a demo surface only: authoritative proof remains the
+        repo-local regressions, the full validation sweep, and tmux smoke
+        evidence.
+      </p>
+      <div class="badge-row">
+        <div class="badge">Actual ANSI capture</div>
+        <div class="badge">4 shipped language examples</div>
+        <div class="badge">Presentation, not proof</div>
+      </div>
+
+      <section class="pi-window">
+        <div class="pi-topbar">
+          <div class="dots">
+            <span class="dot red"></span><span class="dot yellow"></span
+            ><span class="dot green"></span>
           </div>
+          <div>pi · inline-format demo package loaded</div>
+          <div>repo: Banon-Labs/pi-inline-format-extensions</div>
+        </div>
+        <div class="pi-body">
+          <div class="examples">
+            <section class="example">
+              <div class="example-header">
+                <strong>Python</strong>
+                <span>actual ANSI capture from Pi</span>
+              </div>
+              <pre> Use bash to write python to a file using heredocs. Execute into /tmp/delete.me.py
+
+
+<span style="background-color:rgb(40, 50, 40)">
+ </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">$ cat &gt; /tmp/delete.me.py &lt;&lt;'PY'</span><span style="background-color:rgb(40, 50, 40)">
+ </span><span style="color:rgb(106, 153, 85);background-color:rgb(40, 50, 40)">#!/usr/bin/env python3</span><span style="background-color:rgb(40, 50, 40)">
+
+ </span><span style="color:rgb(86, 156, 214);background-color:rgb(40, 50, 40)">def</span><span style="background-color:rgb(40, 50, 40)"> </span><span style="font-weight:700;background-color:rgb(40, 50, 40)"></span><span style="font-weight:700;color:rgb(220, 220, 170);background-color:rgb(40, 50, 40)">main</span><span style="background-color:rgb(40, 50, 40)">() -&gt; </span><span style="color:rgb(181, 206, 168);background-color:rgb(40, 50, 40)">None</span><span style="background-color:rgb(40, 50, 40)">:
+     </span><span style="font-style:italic;background-color:rgb(40, 50, 40)"></span><span style="font-style:italic;color:rgb(78, 201, 176);background-color:rgb(40, 50, 40)">print</span><span style="background-color:rgb(40, 50, 40)">(</span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">&quot;hello from /tmp/delete.me.py&quot;</span><span style="background-color:rgb(40, 50, 40)">)
+
+ </span><span style="color:rgb(86, 156, 214);background-color:rgb(40, 50, 40)">if</span><span style="background-color:rgb(40, 50, 40)"> __name__ == </span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">&quot;__main__&quot;</span><span style="background-color:rgb(40, 50, 40)">:
+     main()
+ </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">PY</span><span style="background-color:rgb(40, 50, 40)">
+
+ </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">(no output)</span><span style="background-color:rgb(40, 50, 40)">
+
+ </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">Took 0.0s</span><span style="background-color:rgb(40, 50, 40)"></span></pre>
+            </section>
+            <section class="example">
+              <div class="example-header">
+                <strong>JavaScript</strong>
+                <span>actual ANSI capture from Pi</span>
+              </div>
+              <pre> Use bash to run javascript from a heredoc with node. Keep the transcript inline and normal.
+
+
+<span style="background-color:rgb(40, 50, 40)">
+ </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">$ node &lt;&lt;'JS'</span><span style="background-color:rgb(40, 50, 40)">
+ </span><span style="color:rgb(86, 156, 214);background-color:rgb(40, 50, 40)">const</span><span style="background-color:rgb(40, 50, 40)"> </span><span style="font-weight:700;text-decoration:underline;background-color:rgb(40, 50, 40)"></span><span style="font-weight:700;text-decoration:underline;color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">value</span><span style="background-color:rgb(40, 50, 40)"> = </span><span style="color:rgb(181, 206, 168);background-color:rgb(40, 50, 40)">42</span><span style="background-color:rgb(40, 50, 40)">;
+ </span><span style="font-style:italic;background-color:rgb(40, 50, 40)"></span><span style="font-style:italic;color:rgb(78, 201, 176);background-color:rgb(40, 50, 40)">console</span><span style="background-color:rgb(40, 50, 40)">.</span><span style="font-style:italic;background-color:rgb(40, 50, 40)"></span><span style="font-style:italic;color:rgb(220, 220, 170);background-color:rgb(40, 50, 40)">log</span><span style="background-color:rgb(40, 50, 40)">(</span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">&quot;hello from js&quot;</span><span style="background-color:rgb(40, 50, 40)">, </span><span style="text-decoration:underline;background-color:rgb(40, 50, 40)"></span><span style="text-decoration:underline;color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">value</span><span style="background-color:rgb(40, 50, 40)">);
+ </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">JS</span><span style="background-color:rgb(40, 50, 40)">
+
+ </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">hello from js 42</span><span style="background-color:rgb(40, 50, 40)">
+
+ </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">Took 1.2s</span><span style="background-color:rgb(40, 50, 40)"></span></pre>
+            </section>
+            <section class="example">
+              <div class="example-header">
+                <strong>TypeScript</strong>
+                <span>actual ANSI capture from Pi</span>
+              </div>
+              <pre> Use bash to write typescript to a file using heredocs. Execute into /tmp/delete.me.ts
+
+
+<span style="background-color:rgb(40, 50, 40)">
+ </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">$ cat &gt; /tmp/delete.me.ts &lt;&lt;'TS'</span><span style="background-color:rgb(40, 50, 40)">
+ </span><span style="color:rgb(86, 156, 214);background-color:rgb(40, 50, 40)">type</span><span style="background-color:rgb(40, 50, 40)"> </span><span style="font-weight:700;background-color:rgb(40, 50, 40)"></span><span style="font-weight:700;color:rgb(78, 201, 176);background-color:rgb(40, 50, 40)">Answer</span><span style="background-color:rgb(40, 50, 40)"> = {
+   </span><span style="font-weight:700;background-color:rgb(40, 50, 40)"></span><span style="font-weight:700;color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">value</span><span style="background-color:rgb(40, 50, 40)">: </span><span style="color:rgb(78, 201, 176);background-color:rgb(40, 50, 40)">number</span><span style="background-color:rgb(40, 50, 40)">;
+ };
+
+ </span><span style="color:rgb(86, 156, 214);background-color:rgb(40, 50, 40)">const</span><span style="background-color:rgb(40, 50, 40)"> </span><span style="font-weight:700;text-decoration:underline;background-color:rgb(40, 50, 40)"></span><span style="font-weight:700;text-decoration:underline;color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">answer</span><span style="background-color:rgb(40, 50, 40)">: </span><span style="color:rgb(78, 201, 176);background-color:rgb(40, 50, 40)">Answer</span><span style="background-color:rgb(40, 50, 40)"> = { </span><span style="font-weight:700;background-color:rgb(40, 50, 40)"></span><span style="font-weight:700;color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">value</span><span style="background-color:rgb(40, 50, 40)">: </span><span style="color:rgb(181, 206, 168);background-color:rgb(40, 50, 40)">42</span><span style="background-color:rgb(40, 50, 40)"> };
+ </span><span style="font-style:italic;background-color:rgb(40, 50, 40)"></span><span style="font-style:italic;color:rgb(78, 201, 176);background-color:rgb(40, 50, 40)">console</span><span style="background-color:rgb(40, 50, 40)">.</span><span style="font-style:italic;background-color:rgb(40, 50, 40)"></span><span style="font-style:italic;color:rgb(220, 220, 170);background-color:rgb(40, 50, 40)">log</span><span style="background-color:rgb(40, 50, 40)">(</span><span style="text-decoration:underline;background-color:rgb(40, 50, 40)"></span><span style="text-decoration:underline;color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">answer</span><span style="background-color:rgb(40, 50, 40)">.</span><span style="color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">value</span><span style="background-color:rgb(40, 50, 40)">);
+ </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">TS</span><span style="background-color:rgb(40, 50, 40)">
+
+ </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">(no output)</span><span style="background-color:rgb(40, 50, 40)">
+
+ </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">Took 0.9s</span><span style="background-color:rgb(40, 50, 40)"></span></pre>
+            </section>
+            <section class="example">
+              <div class="example-header">
+                <strong>Bash</strong>
+                <span>actual ANSI capture from Pi</span>
+              </div>
+              <pre> Use bash to run shell from a heredoc with bash. Keep the transcript inline and normal.
+
+
+<span style="background-color:rgb(40, 50, 40)">
+ </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">$ bash &lt;&lt;'SH'</span><span style="background-color:rgb(40, 50, 40)">
+ </span><span style="font-style:italic;background-color:rgb(40, 50, 40)"></span><span style="font-style:italic;color:rgb(78, 201, 176);background-color:rgb(40, 50, 40)">set</span><span style="background-color:rgb(40, 50, 40)"> -euo pipefail
+ </span><span style="font-style:italic;background-color:rgb(40, 50, 40)"></span><span style="font-style:italic;color:rgb(78, 201, 176);background-color:rgb(40, 50, 40)">echo</span><span style="background-color:rgb(40, 50, 40)"> </span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">&quot;hello from sh&quot;</span><span style="background-color:rgb(40, 50, 40)">
+ </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">SH</span><span style="background-color:rgb(40, 50, 40)">
+
+ </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">hello from sh</span><span style="background-color:rgb(40, 50, 40)">
+
+ </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">Took 0.0s</span><span style="background-color:rgb(40, 50, 40)"></span></pre>
+            </section>
+          </div>
+        </div>
+        <div class="pi-statusbar">
+          <span>render source: actual Pi ANSI captures</span>
+          <span>proof source: repo tests + tmux evidence</span>
         </div>
       </section>
 
-      <section class="grid">
+      <section class="links">
         <article class="card">
-          <h2>Python tool-row demo</h2>
-          <p>
-            The restored bounded host-owned Python seam now feeds smarter
-            highlighting into the normal tool row for the shipped sample path.
-          </p>
-          <div class="terminal">
-            <div class="terminal-header">
-              <span class="dot red"></span>
-              <span class="dot yellow"></span>
-              <span class="dot green"></span>
-              <span>parent CLI-app tmux smoke snippet</span>
-            </div>
-            <pre><span class="prompt">$</span> cat &gt; /tmp/delete.me.py &lt;&lt;'PY'
-#!/usr/bin/env python3
-
-<span class="keyword">def</span> <span class="function declaration">main</span>() -&gt; <span class="type">None</span>:
-    <span class="function builtin">print</span>(<span class="string">"hello from /tmp/delete.me.py"</span>)
-
-<span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:
-    main()
-<span class="prompt">PY</span></pre>
-          </div>
-          <div class="callout">
-            <p>
-              The highlighted <code>main</code> declaration and builtin
-              <code>print</code> call are the exact surface this demo tracks.
-            </p>
-          </div>
-        </article>
-
-        <article class="card">
-          <h2>Proof surfaces</h2>
-          <ul class="proof-list">
+          <h2>Authoritative proof links</h2>
+          <ul>
             <li>
               <a
                 href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/src/shipped-python-smarter-highlight.test.ts"
-                >Focused shipped-Python regression assertion</a
+                >Python smarter-highlight regression</a
+              >
+            </li>
+            <li>
+              <a
+                href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/src/shipped-javascript-smarter-highlight.test.ts"
+                >JavaScript smarter-highlight regression</a
+              >
+            </li>
+            <li>
+              <a
+                href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/src/shipped-typescript-smarter-highlight.test.ts"
+                >TypeScript smarter-highlight regression</a
+              >
+            </li>
+            <li>
+              <a
+                href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/src/shipped-bash-smarter-highlight.test.ts"
+                >Bash smarter-highlight regression</a
               >
             </li>
             <li>
               <a
                 href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/src/shipped-python-tool-row.test.ts"
-                >Inspection-vs-tool-row proof</a
-              >
-            </li>
-            <li>
-              <a
-                href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/src/shipped-python-smarter-highlight-baseline.ts"
-                >Truthful expected segment/style baseline</a
-              >
-            </li>
-            <li>
-              <a
-                href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/src/runtime.ts"
-                >Host render seam</a
-              >
-            </li>
-            <li>
-              <a
-                href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/README.md#shipped-today"
-                >README shipped status</a
+                >Python inspection-vs-tool-row proof</a
               >
             </li>
           </ul>
+        </article>
+        <article class="card">
+          <h2>Trust boundary</h2>
           <p>
-            The repo-local validation pass also reran
-            <code>npm run check</code> plus the full
-            <code>tsx --test</code> sweep before this demo was prepared.
+            These panels are derived from real deterministic Pi captures rather
+            than handwritten mock snippets. GitHub Pages is still not the proof
+            surface; it is only a readable presentation layer over proof that
+            already exists elsewhere in the repo and bd comments.
           </p>
         </article>
       </section>
-
-      <section class="grid" style="margin-top: 20px">
-        <article class="card">
-          <h3>How this page is intended to deploy</h3>
-          <p>
-            This repo-local Pages source is designed to deploy from the
-            <code>docs/</code> directory through the GitHub Pages workflow in
-            <code>.github/workflows/pages.yml</code>.
-          </p>
-          <pre>
-pi --extension ./packages/host/extensions/index.ts --model inline-deterministic/canonical-heredoc-compare \
-  'Use bash to write python to a file using heredocs. Execute into /tmp/delete.me.py'</pre
-          >
-        </article>
-
-        <article class="card">
-          <h3>Important scope boundary</h3>
-          <p>GitHub Pages is not the proof surface. The proof surface is:</p>
-          <ul>
-            <li>repo-local regression tests,</li>
-            <li>full repo validation, and</li>
-            <li>the parent CLI-app tmux smoke transcript.</li>
-          </ul>
-          <p>
-            This page exists to present that already-proven behavior more
-            clearly once the repo is published.
-          </p>
-        </article>
-      </section>
-
-      <footer>
-        Prepared from the local repo after the Python smarter-highlight path,
-        regression proof, validation sweep, README restoration, and tmux smoke
-        evidence all turned green.
-      </footer>
     </main>
   </body>
 </html>
