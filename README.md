@@ -103,14 +103,104 @@ The **intel** package should expose meaning-oriented contracts and backend orche
 
 This repo is the source of truth for the package-backed capabilities shipped by `Banon-Labs/pi-inline-format-extensions`.
 
-| Language     | Detects this heredoc? | Basic highlighting | Inspection backend                                                             | Smarter highlighting in the normal tool row | Status                                             |
-| ------------ | --------------------- | ------------------ | ------------------------------------------------------------------------------ | ------------------------------------------- | -------------------------------------------------- |
-| Python       | ✅                    | ✅                 | ✅ `basedpyright` prototype + semantic-token payloads                          | ❌                                          | supported, richer intel prototype path             |
-| JavaScript   | ✅                    | ✅                 | ✅ TypeScript language service                                                 | ✅                                          | shipped                                            |
-| TypeScript   | ✅                    | ✅                 | ✅ TypeScript language service                                                 | ✅                                          | shipped                                            |
-| Bash / shell | ✅                    | ✅                 | ⚠️ partial (`bash-language-server` + `shellcheck`; no semantic token provider) | ❌                                          | supported, prototype path with explicit parity gap |
+| Language     | Detects this heredoc? | Basic highlighting | Inspection backend                                                             | Smarter highlighting in the normal tool row | Status                                                                                  |
+| ------------ | --------------------- | ------------------ | ------------------------------------------------------------------------------ | ------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Python       | ✅                    | ✅                 | ✅ `basedpyright` prototype + semantic-token payloads                          | ❌                                          | supported, richer intel prototype path; semantic tokens not yet wired into the tool row |
+| JavaScript   | ✅                    | ✅                 | ✅ TypeScript language service                                                 | ✅                                          | shipped                                                                                 |
+| TypeScript   | ✅                    | ✅                 | ✅ TypeScript language service                                                 | ✅                                          | shipped                                                                                 |
+| Bash / shell | ✅                    | ✅                 | ⚠️ partial (`bash-language-server` + `shellcheck`; no semantic token provider) | ❌                                          | supported, prototype path with explicit parity gap                                      |
 
-Bash parity investigation result: upstream `bash-language-server` exposes hover, definition, references, and document highlights, but it does **not** advertise LSP `semanticTokensProvider`. In this repo that means Bash can keep the prototype inspection path, but the normal tool-row smarter-highlighting path remains intentionally unavailable unless we add a different host-owned symbol-aware styling seam.
+We should **not** check off smarter highlighting for Python or Bash yet.
+
+- JavaScript and TypeScript are the only languages whose semantic tokens currently feed the normal bash tool-row render path.
+- Python can now expose semantic-token payloads through `/inline-format-semantic-tokens python`, but that data is still inspection-only and does not yet drive the inline renderer.
+- Bash parity investigation result: upstream `bash-language-server` exposes hover, definition, references, and document highlights, but it does **not** advertise LSP `semanticTokensProvider`. In this repo that means Bash can keep the prototype inspection path, but the normal tool-row smarter-highlighting path remains intentionally unavailable unless we add a different host-owned symbol-aware styling seam.
+
+## Representative interaction visuals
+
+These are **transcript-style visuals** captured from the actual sample commands shipped by `packages/host/extensions/index.ts`. They show what the parent `pi-inline-format` extension can surface after loading this package, without pretending that README screenshots are live UI.
+
+### Hover / inspect sample
+
+```text
+/inline-format-inspect-sample typescript
+Backend: inline-format-typescript-language-service
+Language: typescript
+Kind: hover
+Summary: Resolved hover information via the TypeScript language service. type Answer = {
+    value: number;
+}.
+Ranges: [0:5-0:11]
+Payload: {"quickInfo":"type Answer = {\n    value: number;\n}","filePath":"/tmp/delete.me.ts"}
+```
+
+### Explain symbol
+
+```text
+/inline-format-explain-symbol python main
+Backend: inline-format-basedpyright
+Language: python
+Kind: explain-symbol
+Summary: Explained symbol main via basedpyright. (function) def main() -> None
+Ranges: [2:4-2:8]
+Payload: {"symbolName":"main","hover":"(function) def main() -> None"}
+```
+
+### Find definition
+
+```text
+/inline-format-find-definition bash greet
+Backend: inline-format-bash-language-server
+Language: bash
+Kind: definition
+Summary: Bash language server resolved 1 definition(s) for greet.
+Ranges: [2:0-4:1]
+Payload: {"symbolName":"greet","definitionCount":1,"sameFileDefinitionCount":1,"definitionFiles":["file:///tmp/pi-inline-format-bash-language-server-<temp>/bash.sh"]}
+```
+
+### Highlight symbol
+
+```text
+/inline-format-highlight-symbol javascript value
+Backend: inline-format-typescript-language-service
+Language: javascript
+Kind: document-highlights
+Summary: TypeScript language service reported 2 document highlight(s) for the selected symbol.
+Ranges: [0:6-0:11], [1:12-1:17]
+Payload: {"symbolName":"value","highlightCount":2,"quickInfo":"const value: 42"}
+```
+
+### Semantic tokens
+
+```text
+/inline-format-semantic-tokens python
+Backend: inline-format-basedpyright
+Language: python
+Kind: semantic-tokens
+Summary: Basedpyright reported 2 semantic token(s) for the current virtual document.
+Ranges: [2:4-2:8], [3:4-3:9]
+Payload: {"tokenCount":2,"tokens":[{"range":{"start":{"lineIndex":2,"columnIndex":4},"end":{"lineIndex":2,"columnIndex":8}},"tokenType":"function","modifiers":["declaration"],"text":"main"},{"range":{"start":{"lineIndex":3,"columnIndex":4},"end":{"lineIndex":3,"columnIndex":9}},"tokenType":"function","modifiers":["defaultLibrary","builtin"],"text":"print"}],"legend":{"tokenTypes":["namespace","type","class","enum","typeParameter","parameter","variable","property","enumMember","function","method","keyword","decorator","selfParameter","clsParameter"],"tokenModifiers":["declaration","definition","readonly","static","async","defaultLibrary","builtin","classMember","parameter"]}}
+```
+
+```text
+/inline-format-semantic-tokens bash
+Backend: inline-format-bash-language-server
+Language: bash
+Kind: semantic-tokens
+Summary: bash-language-server does not advertise semanticTokensProvider, so the prototype backend cannot expose semantic-token payloads for Bash yet.
+```
+
+### Diagnostics
+
+```text
+/inline-format-diagnostics-sample bash
+Backend: inline-format-bash-language-server
+Language: bash
+Kind: diagnostics
+Summary: ShellCheck reported 1 diagnostic(s) for the current virtual document.
+Diagnostics: 1
+Payload: {"diagnosticCount":1,"source":"shellcheck"}
+```
 
 ## Researched next candidates
 
