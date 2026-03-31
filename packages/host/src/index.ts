@@ -25,3 +25,5 @@ export {
   sortInlineFormatPlugins,
   validateCanonicalPythonHeredocParity,
 } from "./runtime.js";
+
+export { SHIPPED_TYPESCRIPT_SMARTER_HIGHLIGHT_SEGMENTS } from "./shipped-typescript-smarter-highlight-baseline.js";
