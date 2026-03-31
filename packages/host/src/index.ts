@@ -26,6 +26,8 @@ export {
   validateCanonicalPythonHeredocParity,
 } from "./runtime.js";
 
+export { SHIPPED_JAVASCRIPT_SMARTER_HIGHLIGHT_SEGMENTS } from "./shipped-javascript-smarter-highlight-baseline.js";
+
 export {
   SHIPPED_TYPESCRIPT_SMARTER_HIGHLIGHT_SEGMENTS,
   SHIPPED_TYPESCRIPT_SMARTER_HIGHLIGHT_STYLE_BUCKETS,
