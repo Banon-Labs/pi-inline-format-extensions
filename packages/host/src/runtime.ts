@@ -516,7 +516,7 @@ function supportsSuppliedSemanticTokenRendering(
   return (
     language === "javascript" ||
     language === "typescript" ||
-  language === "python" ||
+    language === "python" ||
     language === "bash"
   );
 }
