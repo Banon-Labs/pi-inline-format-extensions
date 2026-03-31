@@ -7,6 +7,7 @@ import type {
 } from "@pi-inline-format/intel";
 
 import {
+  collectNormalizedPythonSemanticTokensBoundaryPayload,
   collectPythonSemanticTokensBoundaryPayload,
   createPythonSemanticTokensBoundaryContext,
 } from "./index.js";
@@ -17,6 +18,36 @@ const SHIPPED_PYTHON_SAMPLE_COMMAND = `cat > /tmp/delete.me.py <<'PY'
 def main() -> None:
     print("hello")
 PY`;
+
+const SHIPPED_PYTHON_SEMANTIC_TOKENS_RESULT: InlineFormatInspectionResult = {
+  backendName: "stub-python-intel",
+  language: "python",
+  kind: "semantic-tokens",
+  summary: "stubbed raw payload",
+  payload: {
+    tokenCount: 2,
+    tokens: [
+      {
+        range: {
+          start: { lineIndex: 2, columnIndex: 4 },
+          end: { lineIndex: 2, columnIndex: 8 },
+        },
+        tokenType: "function",
+        modifiers: ["declaration"],
+        text: "main",
+      },
+      {
+        range: {
+          start: { lineIndex: 3, columnIndex: 4 },
+          end: { lineIndex: 3, columnIndex: 9 },
+        },
+        tokenType: "function",
+        modifiers: ["defaultLibrary", "builtin"],
+        text: "print",
+      },
+    ],
+  },
+};
 
 test("pins the shipped Python sample semantic-token collection boundary", () => {
   const context = createPythonSemanticTokensBoundaryContext(
@@ -76,6 +107,37 @@ test("collects the raw semantic-token payload without normalization", async () =
   assert.equal(collected.context.document, receivedDocument);
   assert.equal(collected.rawResult, rawResult);
   assert.deepStrictEqual(collected.rawResult?.payload, rawResult.payload);
+});
+
+test("normalizes the collected raw payload into host semantic tokens", async () => {
+  const collected = await collectNormalizedPythonSemanticTokensBoundaryPayload(
+    SHIPPED_PYTHON_SAMPLE_COMMAND,
+    async () => SHIPPED_PYTHON_SEMANTIC_TOKENS_RESULT,
+    "/repo",
+  );
+
+  assert.ok(collected);
+  assert.equal(collected.rawResult, SHIPPED_PYTHON_SEMANTIC_TOKENS_RESULT);
+  assert.deepStrictEqual(collected.tokens, [
+    {
+      range: {
+        start: { lineIndex: 2, columnIndex: 4 },
+        end: { lineIndex: 2, columnIndex: 8 },
+      },
+      tokenType: "function",
+      modifiers: ["declaration"],
+      text: "main",
+    },
+    {
+      range: {
+        start: { lineIndex: 3, columnIndex: 4 },
+        end: { lineIndex: 3, columnIndex: 9 },
+      },
+      tokenType: "function",
+      modifiers: ["defaultLibrary", "builtin"],
+      text: "print",
+    },
+  ]);
 });
 
 test("returns null when the command does not contain a Python heredoc", async () => {

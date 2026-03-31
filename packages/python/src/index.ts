@@ -1,6 +1,8 @@
 import {
   createInlineFormatVirtualDocument,
+  normalizeInlineFormatSemanticTokens,
   type InlineFormatInspectionResult,
+  type InlineFormatSemanticToken,
   type InlineFormatVirtualDocument,
 } from "@pi-inline-format/intel";
 import type {
@@ -24,6 +26,10 @@ export interface PythonSemanticTokensBoundaryContext {
 export interface PythonSemanticTokensBoundaryPayload {
   context: PythonSemanticTokensBoundaryContext;
   rawResult: InlineFormatInspectionResult | null;
+}
+
+export interface PythonNormalizedSemanticTokensBoundaryPayload extends PythonSemanticTokensBoundaryPayload {
+  tokens: InlineFormatSemanticToken[];
 }
 
 export type PythonSemanticTokensInspector = (
@@ -161,6 +167,30 @@ export async function collectPythonSemanticTokensBoundaryPayload(
   return {
     context,
     rawResult: await inspect(context.document, "semantic-tokens"),
+  };
+}
+
+export async function collectNormalizedPythonSemanticTokensBoundaryPayload(
+  command: string,
+  inspect: PythonSemanticTokensInspector,
+  projectRoot: string = process.cwd(),
+): Promise<PythonNormalizedSemanticTokensBoundaryPayload | null> {
+  const collected = await collectPythonSemanticTokensBoundaryPayload(
+    command,
+    inspect,
+    projectRoot,
+  );
+
+  if (collected === null) {
+    return null;
+  }
+
+  return {
+    ...collected,
+    tokens:
+      collected.rawResult === null
+        ? []
+        : normalizeInlineFormatSemanticTokens(collected.rawResult),
   };
 }
 
