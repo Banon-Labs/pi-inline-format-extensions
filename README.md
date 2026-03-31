@@ -103,12 +103,12 @@ The **intel** package should expose meaning-oriented contracts and backend orche
 
 This repo is the source of truth for the package-backed capabilities shipped by `Banon-Labs/pi-inline-format-extensions`.
 
-| Language     | Detects this heredoc? | Basic highlighting | Inspection backend                                                             | Smarter highlighting in the normal tool row | Status                                                                                  |
-| ------------ | --------------------- | ------------------ | ------------------------------------------------------------------------------ | ------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Language     | Detects this heredoc? | Basic highlighting | Inspection backend                                                             | Smarter highlighting in the normal tool row | Status                                                                                                        |
+| ------------ | --------------------- | ------------------ | ------------------------------------------------------------------------------ | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
 | Python       | ✅                    | ✅                 | ✅ `basedpyright` prototype + semantic-token payloads                          | ✅                                          | supported for the shipped sample; parent CLI-app tmux proof showed smarter-highlighted normal tool-row output |
-| JavaScript   | ✅                    | ✅                 | ✅ TypeScript language service                                                 | ✅                                          | shipped                                                                                 |
-| TypeScript   | ✅                    | ✅                 | ✅ TypeScript language service                                                 | ✅                                          | shipped                                                                                 |
-| Bash / shell | ✅                    | ✅                 | ⚠️ partial (`bash-language-server` + `shellcheck`; no semantic token provider) | ❌                                          | supported, prototype path with explicit parity gap                                      |
+| JavaScript   | ✅                    | ✅                 | ✅ TypeScript language service                                                 | ✅                                          | shipped                                                                                                       |
+| TypeScript   | ✅                    | ✅                 | ✅ TypeScript language service                                                 | ✅                                          | shipped                                                                                                       |
+| Bash / shell | ✅                    | ✅                 | ⚠️ partial (`bash-language-server` + `shellcheck`; no semantic token provider) | ❌                                          | supported, prototype path with explicit parity gap                                                            |
 
 We should **not** check off smarter highlighting for Bash yet.
 
