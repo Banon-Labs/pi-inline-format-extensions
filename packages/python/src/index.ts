@@ -258,6 +258,25 @@ export async function collectPythonSemanticTokensRenderHandoffPayload(
   };
 }
 
+export async function renderPythonSemanticTokensAtBoundary<TResult>(
+  command: string,
+  inspect: PythonSemanticTokensInspector,
+  entrypoint: PythonSemanticTokensRenderEntrypointReference<TResult>,
+  projectRoot: string = process.cwd(),
+): Promise<TResult | null> {
+  const payload = await collectPythonSemanticTokensRenderHandoffPayload(
+    command,
+    inspect,
+    projectRoot,
+  );
+
+  if (payload === null) {
+    return null;
+  }
+
+  return await entrypoint.render(payload);
+}
+
 function detectPythonHeredoc(command: string): InlineFormatMatch | null {
   const heredocRange = findPythonHeredocRange(command);
 

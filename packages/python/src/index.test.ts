@@ -13,6 +13,7 @@ import {
   collectPythonSemanticTokensRenderSlicePayload,
   createPythonSemanticTokensBoundaryContext,
   createPythonSemanticTokensRenderEntrypointReference,
+  renderPythonSemanticTokensAtBoundary,
 } from "./index.js";
 
 const SHIPPED_PYTHON_SAMPLE_COMMAND = `cat > /tmp/delete.me.py <<'PY'
@@ -195,6 +196,38 @@ test("creates a bounded reference to the host caller-supplied render entrypoint"
 
   assert.equal(reference.render, render);
   assert.equal(callCount, 0);
+});
+
+test("calls the host caller-supplied render entrypoint through the pinned boundary", async () => {
+  let seenPayload:
+    | Awaited<
+        ReturnType<typeof collectPythonSemanticTokensRenderHandoffPayload>
+      >
+    | undefined;
+  const reference = createPythonSemanticTokensRenderEntrypointReference(
+    (payload) => {
+      seenPayload = payload;
+      return payload.sourceLines.join(" | ");
+    },
+  );
+
+  const rendered = await renderPythonSemanticTokensAtBoundary(
+    SHIPPED_PYTHON_SAMPLE_COMMAND,
+    async () => SHIPPED_PYTHON_SEMANTIC_TOKENS_RESULT,
+    reference,
+    "/repo",
+  );
+
+  assert.equal(
+    rendered,
+    '#!/usr/bin/env python3 |  | def main() -> None: |     print("hello")',
+  );
+  assert.ok(seenPayload);
+  assert.equal(seenPayload.language, "python");
+  assert.deepStrictEqual(
+    seenPayload.tokens.map((token) => token.text),
+    ["main", "print"],
+  );
 });
 
 test("returns null when the command does not contain a Python heredoc", async () => {
