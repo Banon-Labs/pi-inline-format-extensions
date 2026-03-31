@@ -17,10 +17,10 @@ def main() -> None:
 PY`;
 
 const markerTheme = {
-  fg: (_color: string, text: string) => text,
-  bold: (text: string) => text,
-  italic: (text: string) => text,
-  underline: (text: string) => text,
+  fg: (color: string, text: string) => `<fg:${color}>${text}</fg>`,
+  bold: (text: string) => `<bold>${text}</bold>`,
+  italic: (text: string) => `<italic>${text}</italic>`,
+  underline: (text: string) => `<underline>${text}</underline>`,
 };
 
 const ANSI_PATTERN = /\u001b\[[0-9;]*m/gu;
@@ -29,7 +29,7 @@ function stripAnsi(text: string): string {
   return text.replaceAll(ANSI_PATTERN, "");
 }
 
-test("keeps Python semantic-token inspection truthful while the normal tool row still falls back to basic highlighting", async () => {
+test("keeps Python semantic-token inspection truthful and now threads shipped tokens into the normal tool row", async () => {
   const lines = SHIPPED_PYTHON_SAMPLE_COMMAND.split("\n");
   const match = detectInlineFormatMatches(SHIPPED_PYTHON_SAMPLE_COMMAND).find(
     (candidate) => candidate.language === "python",
@@ -92,7 +92,17 @@ test("keeps Python semantic-token inspection truthful while the normal tool row 
     .map((line) => stripAnsi(line).trimEnd())
     .slice(match.startLineIndex, match.endLineIndex + 1);
 
-  assert.deepStrictEqual(actualBodyLines, [
+  assert.equal(actualBodyLines[0], "#!/usr/bin/env python3");
+  assert.equal(actualBodyLines[1], "");
+  assert.match(
+    actualBodyLines[2] ?? "",
+    /<fg:syntaxFunction><bold>main<\/bold><\/fg>/u,
+  );
+  assert.match(
+    actualBodyLines[3] ?? "",
+    /<fg:syntaxFunction><italic>print<\/italic><\/fg>/u,
+  );
+  assert.notDeepStrictEqual(actualBodyLines, [
     "#!/usr/bin/env python3",
     "",
     "def main() -> None:",

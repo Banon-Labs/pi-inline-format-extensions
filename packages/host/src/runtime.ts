@@ -38,6 +38,7 @@ import { Text } from "@mariozechner/pi-tui";
 import { Type } from "@sinclair/typebox";
 
 import { collectHostBashSmarterHighlightTokens } from "./bash-smarter-highlight.js";
+import { collectHostPythonSmarterHighlightTokens } from "./python-smarter-highlight.js";
 
 const CANONICAL_PYTHON_HEREDOC_COMMAND = `cat > /tmp/delete.me.py <<'PY'
 #!/usr/bin/env python3
@@ -635,13 +636,17 @@ function collectSuppliedSemanticTokensForMatch(
     return null;
   }
 
+  const document = createInlineFormatVirtualDocument(region);
+
   if (match.language === "bash") {
     return collectHostBashSmarterHighlightTokens(region.source);
   }
 
-  return collectInlineFormatSemanticTokens(
-    createInlineFormatVirtualDocument(region),
-  );
+  if (match.language === "python") {
+    return collectHostPythonSmarterHighlightTokens(document);
+  }
+
+  return collectInlineFormatSemanticTokens(document);
 }
 
 function renderInlineHighlightedBashCall(
