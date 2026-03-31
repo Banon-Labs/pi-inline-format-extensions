@@ -35,3 +35,8 @@ export {
   SHIPPED_TYPESCRIPT_SMARTER_HIGHLIGHT_SEGMENTS,
   SHIPPED_TYPESCRIPT_SMARTER_HIGHLIGHT_STYLE_BUCKETS,
 } from "./shipped-typescript-smarter-highlight-baseline.js";
+
+export {
+  SHIPPED_PYTHON_SMARTER_HIGHLIGHT_SEGMENTS,
+  SHIPPED_PYTHON_SMARTER_HIGHLIGHT_STYLE_BUCKETS,
+} from "./shipped-python-smarter-highlight-baseline.js";
