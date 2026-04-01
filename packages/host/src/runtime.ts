@@ -573,7 +573,7 @@ function collectSuppliedSemanticTokensForMatch(
     return null;
   }
 
-  const region = createInlineFormatRegionReference(command, match.language);
+  const region = createInlineFormatRegionReference(command, match);
   if (region === null) {
     return null;
   }
@@ -729,9 +729,15 @@ function detectWithPlugins(
   command: string,
 ): InlineFormatMatch[] {
   return sortInlineFormatMatches(
-    plugins
-      .map((plugin) => plugin.detect(command))
-      .filter((match): match is InlineFormatMatch => match !== null),
+    plugins.flatMap((plugin) => {
+      const detected = plugin.detect(command);
+
+      if (detected === null) {
+        return [];
+      }
+
+      return Array.isArray(detected) ? [...detected] : [detected];
+    }),
   );
 }
 
@@ -818,10 +824,13 @@ function inferInlineFormatFilePathHint(command: string): string | undefined {
 
 export function createInlineFormatRegionReference(
   command: string,
-  language?: string,
+  languageOrMatch?: string | InlineFormatMatch,
   projectRoot: string = process.cwd(),
 ): InlineFormatRegionReference | null {
-  const match = findInlineFormatMatch(command, language);
+  const match =
+    typeof languageOrMatch === "string" || languageOrMatch === undefined
+      ? findInlineFormatMatch(command, languageOrMatch)
+      : languageOrMatch;
   if (match === undefined) {
     return null;
   }

@@ -17,13 +17,14 @@
   },
   "scripts": {
     "build:pages-demo": "tsx scripts/build-pages-demo.ts",
-    "check": "npm run format && npm run typecheck && npm run check:pages-raw-bash-proof && npm run check:root-package-install && npm run check:npm-tarball-install",
+    "check": "npm run format && npm run typecheck && npm run check:pages-raw-bash-proof && npm run check:multi-inline-heredoc-render && npm run check:root-package-install && npm run check:npm-tarball-install",
     "check:release-readiness": "node ./scripts/check-release-readiness.mjs",
     "check:root-package-install": "node ./scripts/check-root-package-install.mjs",
     "format": "prettier --check .",
     "format:write": "prettier --write .",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "check:pages-raw-bash-proof": "node ./scripts/check-pages-raw-bash-proof.mjs",
+    "check:multi-inline-heredoc-render": "tsx ./scripts/check-multi-inline-heredoc-render.ts",
     "check:npm-tarball-install": "node ./scripts/check-npm-tarball-install.mjs",
     "check:npm-warnings": "node ./scripts/check-npm-tarball-install.mjs"
   },

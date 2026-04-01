@@ -1,6 +1,7 @@
 import {
   extractInlineFormatHeredocOpenerCommand,
   findInlineFormatHeredocRange,
+  findInlineFormatHeredocRanges,
   type InlineFormatMatch,
   type InlineFormatPlugin,
 } from "@pi-inline-format/shared-contract";
@@ -20,48 +21,47 @@ function isTypeScriptHeredocOpener(line: string): boolean {
   );
 }
 
+export function findTypeScriptHeredocRanges(command: string): {
+  startLineIndex: number;
+  endLineIndex: number;
+}[] {
+  const explicitRanges = findInlineFormatHeredocRanges(command, {
+    terminator: TYPESCRIPT_HEREDOC_TERMINATOR,
+  });
+
+  if (explicitRanges.length > 0) {
+    return explicitRanges;
+  }
+
+  return findInlineFormatHeredocRanges(command).filter((range) => {
+    const openerCommand = extractInlineFormatHeredocOpenerCommand(
+      range.openerLine,
+    );
+
+    return isTypeScriptHeredocOpener(openerCommand);
+  });
+}
+
 export function findTypeScriptHeredocRange(command: string): {
   startLineIndex: number;
   endLineIndex: number;
 } | null {
-  const explicitRange = findInlineFormatHeredocRange(command, {
-    terminator: TYPESCRIPT_HEREDOC_TERMINATOR,
-  });
-
-  if (explicitRange !== null) {
-    return explicitRange;
-  }
-
-  const genericRange = findInlineFormatHeredocRange(command);
-  const openerCommand =
-    genericRange === null
-      ? null
-      : extractInlineFormatHeredocOpenerCommand(genericRange.openerLine);
-
-  if (
-    genericRange === null ||
-    openerCommand === null ||
-    !isTypeScriptHeredocOpener(openerCommand)
-  ) {
-    return null;
-  }
-
-  return genericRange;
+  return findTypeScriptHeredocRanges(command)[0] ?? null;
 }
 
-function detectTypeScriptHeredoc(command: string): InlineFormatMatch | null {
-  const heredocRange = findTypeScriptHeredocRange(command);
+function detectTypeScriptHeredoc(command: string): InlineFormatMatch[] | null {
+  const heredocRanges = findTypeScriptHeredocRanges(command);
 
-  if (heredocRange === null) {
+  if (heredocRanges.length === 0) {
     return null;
   }
 
-  return {
+  return heredocRanges.map((heredocRange) => ({
     pluginName: "typescript",
     language: "typescript",
     startLineIndex: heredocRange.startLineIndex + 1,
     endLineIndex: heredocRange.endLineIndex - 1,
-  };
+  }));
 }
 
 export const typescriptInlineFormatPlugin: InlineFormatPlugin = {

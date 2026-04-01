@@ -8,7 +8,9 @@ export interface InlineFormatMatch {
 export interface InlineFormatPlugin {
   name: string;
   language: string;
-  detect(command: string): InlineFormatMatch | null;
+  detect(
+    command: string,
+  ): InlineFormatMatch | readonly InlineFormatMatch[] | null;
 }
 
 export interface InlineFormatHeredocRange {
@@ -141,6 +143,62 @@ export function extractInlineFormatHeredocOpenerCommand(
   return normalizeInlineFormatShellSegment(lastSegment);
 }
 
+export function findInlineFormatHeredocRanges(
+  command: string,
+  options: {
+    terminator?: string;
+    allowReservedTerminator?: boolean;
+  } = {},
+): InlineFormatHeredocRange[] {
+  const lines = command.split("\n");
+  const ranges: InlineFormatHeredocRange[] = [];
+
+  for (
+    let startLineIndex = 0;
+    startLineIndex < lines.length;
+    startLineIndex += 1
+  ) {
+    const openerLine = lines[startLineIndex]!;
+    const match = INLINE_FORMAT_HEREDOC_PATTERN.exec(openerLine);
+    const terminator =
+      match?.groups?.single ?? match?.groups?.double ?? match?.groups?.bare;
+
+    if (terminator === undefined) {
+      continue;
+    }
+
+    if (options.terminator !== undefined && terminator !== options.terminator) {
+      continue;
+    }
+
+    if (
+      options.terminator === undefined &&
+      !options.allowReservedTerminator &&
+      isReservedInlineFormatHeredocTerminator(terminator)
+    ) {
+      continue;
+    }
+
+    const endLineIndex = lines.findIndex(
+      (line, index) => index > startLineIndex && line === terminator,
+    );
+
+    if (endLineIndex <= startLineIndex + 1) {
+      continue;
+    }
+
+    ranges.push({
+      startLineIndex,
+      endLineIndex,
+      openerLine,
+      terminator,
+    });
+    startLineIndex = endLineIndex;
+  }
+
+  return ranges;
+}
+
 export function findInlineFormatHeredocRange(
   command: string,
   options: {
@@ -148,48 +206,5 @@ export function findInlineFormatHeredocRange(
     allowReservedTerminator?: boolean;
   } = {},
 ): InlineFormatHeredocRange | null {
-  const lines = command.split("\n");
-  const startLineIndex = lines.findIndex((line) =>
-    INLINE_FORMAT_HEREDOC_PATTERN.test(line),
-  );
-
-  if (startLineIndex === -1) {
-    return null;
-  }
-
-  const openerLine = lines[startLineIndex]!;
-  const match = INLINE_FORMAT_HEREDOC_PATTERN.exec(openerLine);
-  const terminator =
-    match?.groups?.single ?? match?.groups?.double ?? match?.groups?.bare;
-
-  if (terminator === undefined) {
-    return null;
-  }
-
-  if (options.terminator !== undefined && terminator !== options.terminator) {
-    return null;
-  }
-
-  if (
-    options.terminator === undefined &&
-    !options.allowReservedTerminator &&
-    isReservedInlineFormatHeredocTerminator(terminator)
-  ) {
-    return null;
-  }
-
-  const endLineIndex = lines.findIndex(
-    (line, index) => index > startLineIndex && line === terminator,
-  );
-
-  if (endLineIndex <= startLineIndex + 1) {
-    return null;
-  }
-
-  return {
-    startLineIndex,
-    endLineIndex,
-    openerLine,
-    terminator,
-  };
+  return findInlineFormatHeredocRanges(command, options)[0] ?? null;
 }

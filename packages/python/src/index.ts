@@ -8,6 +8,7 @@ import {
 import {
   extractInlineFormatHeredocOpenerCommand,
   findInlineFormatHeredocRange,
+  findInlineFormatHeredocRanges,
   type InlineFormatMatch,
   type InlineFormatPlugin,
 } from "@pi-inline-format/shared-contract";
@@ -63,33 +64,32 @@ export function createPythonSemanticTokensRenderEntrypointReference<TResult>(
 
 const PYTHON_HEREDOC_COMMAND_PATTERN = /^\s*python(?:3)?(?:\s|$)/u;
 
+export function findPythonHeredocRanges(command: string): {
+  startLineIndex: number;
+  endLineIndex: number;
+}[] {
+  const explicitRanges = findInlineFormatHeredocRanges(command, {
+    terminator: PYTHON_HEREDOC_TERMINATOR,
+  });
+
+  if (explicitRanges.length > 0) {
+    return explicitRanges;
+  }
+
+  return findInlineFormatHeredocRanges(command).filter((range) => {
+    const openerCommand = extractInlineFormatHeredocOpenerCommand(
+      range.openerLine,
+    );
+
+    return PYTHON_HEREDOC_COMMAND_PATTERN.test(openerCommand);
+  });
+}
+
 export function findPythonHeredocRange(command: string): {
   startLineIndex: number;
   endLineIndex: number;
 } | null {
-  const explicitRange = findInlineFormatHeredocRange(command, {
-    terminator: PYTHON_HEREDOC_TERMINATOR,
-  });
-
-  if (explicitRange !== null) {
-    return explicitRange;
-  }
-
-  const genericRange = findInlineFormatHeredocRange(command);
-  const openerCommand =
-    genericRange === null
-      ? null
-      : extractInlineFormatHeredocOpenerCommand(genericRange.openerLine);
-
-  if (
-    genericRange === null ||
-    openerCommand === null ||
-    !PYTHON_HEREDOC_COMMAND_PATTERN.test(openerCommand)
-  ) {
-    return null;
-  }
-
-  return genericRange;
+  return findPythonHeredocRanges(command)[0] ?? null;
 }
 
 export function extractPythonHeredocSource(command: string): string | null {
@@ -285,19 +285,19 @@ export async function renderPythonSemanticTokensAtBoundary<TResult>(
   return await entrypoint.render(payload);
 }
 
-function detectPythonHeredoc(command: string): InlineFormatMatch | null {
-  const heredocRange = findPythonHeredocRange(command);
+function detectPythonHeredoc(command: string): InlineFormatMatch[] | null {
+  const heredocRanges = findPythonHeredocRanges(command);
 
-  if (heredocRange === null) {
+  if (heredocRanges.length === 0) {
     return null;
   }
 
-  return {
+  return heredocRanges.map((heredocRange) => ({
     pluginName: "python",
     language: "python",
     startLineIndex: heredocRange.startLineIndex + 1,
     endLineIndex: heredocRange.endLineIndex - 1,
-  };
+  }));
 }
 
 export const pythonInlineFormatPlugin: InlineFormatPlugin = {
