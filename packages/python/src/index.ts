@@ -6,6 +6,7 @@ import {
   type InlineFormatVirtualDocument,
 } from "@pi-inline-format/intel";
 import {
+  extractInlineFormatHeredocOpenerCommand,
   findInlineFormatHeredocRange,
   type InlineFormatMatch,
   type InlineFormatPlugin,
@@ -75,10 +76,15 @@ export function findPythonHeredocRange(command: string): {
   }
 
   const genericRange = findInlineFormatHeredocRange(command);
+  const openerCommand =
+    genericRange === null
+      ? null
+      : extractInlineFormatHeredocOpenerCommand(genericRange.openerLine);
 
   if (
     genericRange === null ||
-    !PYTHON_HEREDOC_COMMAND_PATTERN.test(genericRange.openerLine)
+    openerCommand === null ||
+    !PYTHON_HEREDOC_COMMAND_PATTERN.test(openerCommand)
   ) {
     return null;
   }

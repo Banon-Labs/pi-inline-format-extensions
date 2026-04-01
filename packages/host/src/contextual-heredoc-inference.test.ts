@@ -31,6 +31,17 @@ const NODE_IMPORT_TSX_PARITY_COMMAND =
     "npx tsx <<'TS'",
     "node --import tsx <<'EOF'",
   ).replace(/\nTS$/u, "\nEOF");
+const CONTROL_FLOW_TYPESCRIPT_GENERIC_HEREDOC_COMMAND = [
+  "echo ready && node --import tsx <<'EOF'",
+  "const wrapped: number = 42;",
+  "console.log(wrapped);",
+  "EOF",
+].join("\n");
+const CONTROL_FLOW_TYPESCRIPT_PARITY_COMMAND =
+  NODE_IMPORT_TSX_PARITY_COMMAND.replace(
+    "node --import tsx <<'EOF'",
+    "echo ready && node --import tsx <<'EOF'",
+  );
 const NODE_IMPORT_TSX_ESM_SAMPLE_COMMAND = [
   "node --import tsx/esm <<'EOF'",
   "const message: string = 'hello from tsx';",
@@ -59,13 +70,28 @@ const PYTHON_DASH_GENERIC_HEREDOC_COMMAND = [
   "print('hello from python dash')",
   "EOF",
 ].join("\n");
+const CONTROL_FLOW_PYTHON_GENERIC_HEREDOC_COMMAND = [
+  "false || python3 <<'EOF'",
+  "print('hello from wrapped python3')",
+  "EOF",
+].join("\n");
 const NODE_MODULE_GENERIC_HEREDOC_COMMAND = [
   "node --input-type=module <<'EOF'",
   "console.log('hello from node module')",
   "EOF",
 ].join("\n");
+const CONTROL_FLOW_BASH_GENERIC_HEREDOC_COMMAND = [
+  "if true; then bash <<'EOF'",
+  "echo 'wrapped bash'",
+  "EOF",
+].join("\n");
 const UNKNOWN_GENERIC_HEREDOC_COMMAND = [
   "cat <<'EOF'",
+  "opaque ${still_plain}",
+  "EOF",
+].join("\n");
+const CONTROL_FLOW_UNKNOWN_GENERIC_HEREDOC_COMMAND = [
+  "false || cat <<'EOF'",
   "opaque ${still_plain}",
   "EOF",
 ].join("\n");
@@ -147,6 +173,18 @@ test("detects GitHub-style generic Python EOF cues", () => {
   );
 });
 
+test("detects control-flow wrapped Python generic EOF cues", () => {
+  assert.deepStrictEqual(
+    findLanguageMatch(CONTROL_FLOW_PYTHON_GENERIC_HEREDOC_COMMAND, "python"),
+    {
+      pluginName: "python",
+      language: "python",
+      startLineIndex: 1,
+      endLineIndex: 1,
+    },
+  );
+});
+
 test("detects Node stdin module heredocs as JavaScript", () => {
   assert.deepStrictEqual(
     findLanguageMatch(NODE_MODULE_GENERIC_HEREDOC_COMMAND, "javascript"),
@@ -171,6 +209,28 @@ test("detects node --import tsx generic heredocs as TypeScript instead of JavaSc
   );
   assert.deepStrictEqual(
     findLanguageMatch(NODE_IMPORT_TSX_SAMPLE_COMMAND, "javascript"),
+    undefined,
+  );
+});
+
+test("detects control-flow wrapped node --import tsx heredocs as TypeScript", () => {
+  assert.deepStrictEqual(
+    findLanguageMatch(
+      CONTROL_FLOW_TYPESCRIPT_GENERIC_HEREDOC_COMMAND,
+      "typescript",
+    ),
+    {
+      pluginName: "typescript",
+      language: "typescript",
+      startLineIndex: 1,
+      endLineIndex: 2,
+    },
+  );
+  assert.deepStrictEqual(
+    findLanguageMatch(
+      CONTROL_FLOW_TYPESCRIPT_GENERIC_HEREDOC_COMMAND,
+      "javascript",
+    ),
     undefined,
   );
 });
@@ -212,9 +272,28 @@ test("detects additional tsx launcher variants with generic EOF heredocs", () =>
   );
 });
 
+test("detects control-flow wrapped bash generic EOF cues", () => {
+  assert.deepStrictEqual(
+    findLanguageMatch(CONTROL_FLOW_BASH_GENERIC_HEREDOC_COMMAND, "bash"),
+    {
+      pluginName: "bash",
+      language: "bash",
+      startLineIndex: 1,
+      endLineIndex: 1,
+    },
+  );
+});
+
 test("renders node --import tsx generic heredocs with TypeScript smarter highlighting", () => {
   assert.deepStrictEqual(
     renderBodyLines(NODE_IMPORT_TSX_PARITY_COMMAND),
+    renderBodyLines(STANDARD_TYPESCRIPT_SAMPLE_COMMAND),
+  );
+});
+
+test("renders control-flow wrapped node --import tsx generic heredocs with TypeScript smarter highlighting", () => {
+  assert.deepStrictEqual(
+    renderBodyLines(CONTROL_FLOW_TYPESCRIPT_PARITY_COMMAND),
     renderBodyLines(STANDARD_TYPESCRIPT_SAMPLE_COMMAND),
   );
 });
@@ -226,10 +305,14 @@ test("keeps the plain fallback when a generic heredoc has no language context", 
     detectInlineFormatMatches(UNKNOWN_GENERIC_HEREDOC_COMMAND),
     [],
   );
+  assert.deepStrictEqual(
+    detectInlineFormatMatches(CONTROL_FLOW_UNKNOWN_GENERIC_HEREDOC_COMMAND),
+    [],
+  );
 
   const rendered = toolDefinition.renderCall(
     {
-      command: UNKNOWN_GENERIC_HEREDOC_COMMAND,
+      command: CONTROL_FLOW_UNKNOWN_GENERIC_HEREDOC_COMMAND,
     },
     markerTheme as never,
     {
@@ -240,6 +323,6 @@ test("keeps the plain fallback when a generic heredoc has no language context", 
 
   assert.deepStrictEqual(
     rendered.render(400).map((line) => stripMarkerTags(line.trimEnd())),
-    ["$ cat <<'EOF'", "opaque ${still_plain}", "EOF"],
+    ["$ false || cat <<'EOF'", "opaque ${still_plain}", "EOF"],
   );
 });

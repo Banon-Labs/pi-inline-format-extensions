@@ -1,4 +1,5 @@
 import {
+  extractInlineFormatHeredocOpenerCommand,
   findInlineFormatHeredocRange,
   type InlineFormatMatch,
   type InlineFormatPlugin,
@@ -24,11 +25,16 @@ export function findJavaScriptHeredocRange(command: string): {
   }
 
   const genericRange = findInlineFormatHeredocRange(command);
+  const openerCommand =
+    genericRange === null
+      ? null
+      : extractInlineFormatHeredocOpenerCommand(genericRange.openerLine);
 
   if (
     genericRange === null ||
-    !JAVASCRIPT_HEREDOC_COMMAND_PATTERN.test(genericRange.openerLine) ||
-    TYPESCRIPT_NODE_RUNTIME_PATTERN.test(genericRange.openerLine)
+    openerCommand === null ||
+    !JAVASCRIPT_HEREDOC_COMMAND_PATTERN.test(openerCommand) ||
+    TYPESCRIPT_NODE_RUNTIME_PATTERN.test(openerCommand)
   ) {
     return null;
   }

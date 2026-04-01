@@ -1,4 +1,5 @@
 import {
+  extractInlineFormatHeredocOpenerCommand,
   findInlineFormatHeredocRange,
   type InlineFormatMatch,
   type InlineFormatPlugin,
@@ -32,10 +33,15 @@ export function findTypeScriptHeredocRange(command: string): {
   }
 
   const genericRange = findInlineFormatHeredocRange(command);
+  const openerCommand =
+    genericRange === null
+      ? null
+      : extractInlineFormatHeredocOpenerCommand(genericRange.openerLine);
 
   if (
     genericRange === null ||
-    !isTypeScriptHeredocOpener(genericRange.openerLine)
+    openerCommand === null ||
+    !isTypeScriptHeredocOpener(openerCommand)
   ) {
     return null;
   }

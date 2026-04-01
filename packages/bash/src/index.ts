@@ -1,4 +1,5 @@
 import {
+  extractInlineFormatHeredocOpenerCommand,
   findInlineFormatHeredocRange,
   type InlineFormatMatch,
   type InlineFormatPlugin,
@@ -22,10 +23,15 @@ export function findBashHeredocRange(command: string): {
   }
 
   const genericRange = findInlineFormatHeredocRange(command);
+  const openerCommand =
+    genericRange === null
+      ? null
+      : extractInlineFormatHeredocOpenerCommand(genericRange.openerLine);
 
   if (
     genericRange === null ||
-    !BASH_HEREDOC_COMMAND_PATTERN.test(genericRange.openerLine)
+    openerCommand === null ||
+    !BASH_HEREDOC_COMMAND_PATTERN.test(openerCommand)
   ) {
     return null;
   }
