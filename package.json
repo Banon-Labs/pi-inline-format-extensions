@@ -17,7 +17,8 @@
   },
   "scripts": {
     "build:pages-demo": "tsx scripts/build-pages-demo.ts",
-    "check": "npm run format && npm run typecheck",
+    "check": "npm run format && npm run typecheck && npm run check:root-package-install",
+    "check:root-package-install": "node ./scripts/check-root-package-install.mjs",
     "format": "prettier --check .",
     "format:write": "prettier --write .",
     "typecheck": "tsc --noEmit -p tsconfig.json"

@@ -1,5 +1,9 @@
 # pi-inline-format-extensions
 
+[![check](https://github.com/Banon-Labs/pi-inline-format-extensions/actions/workflows/check.yml/badge.svg)](https://github.com/Banon-Labs/pi-inline-format-extensions/actions/workflows/check.yml)
+
+# pi-inline-format-extensions
+
 Host/plugin workspace for a package-backed inline formatting platform.
 
 ## Goal
