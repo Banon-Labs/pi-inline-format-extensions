@@ -28,7 +28,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: node ./scripts/run-npm-command-without-warnings.mjs ci
 
       - name: Run workspace quality gates and root-package install smoke
         run: npm run check

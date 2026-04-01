@@ -13,12 +13,6 @@ import path from "node:path";
 const PACKAGE_NAME = "@banon-labs/pi-inline-format-extensions";
 const PROMPT =
   "Use bash to run python from a heredoc with python3. Use PY as the heredoc delimiter exactly. Keep the transcript inline and normal.";
-const EXPECTED_TOOL_RESULT = "hello from py";
-const EXPECTED_COMMAND_SNIPPETS = [
-  "python3 <<'PY'",
-  'print("hello from py")',
-  "PY",
-];
 
 const repoRoot = process.cwd();
 const tempRoot = mkdtempSync(
@@ -76,6 +70,7 @@ try {
     ].join("\n"),
   );
 } finally {
+  rmSync(tempRoot, { recursive: true, force: true });
 }
 
 console.log(
@@ -131,10 +126,21 @@ function run(command, args, cwd) {
     throw result.error;
   }
 
-  if (result.status !== 0) {
+  const warningLines =
+    command !== "npm"
+      ? []
+      : `${result.stdout}\n${result.stderr}`
+          .split(/\r?\n/u)
+          .map((line) => line.trim())
+          .filter((line) => /^npm warn\b/iu.test(line));
+
+  if (result.status !== 0 || warningLines.length > 0) {
     throw new Error(
       [
-        `${command} ${args.join(" ")} exited with status ${String(result.status)}.`,
+        `${command} ${args.join(" ")} ${result.status !== 0 ? `exited with status ${String(result.status)}.` : "emitted blocked npm warnings."}`,
+        ...(warningLines.length === 0
+          ? []
+          : ["--- npm warnings ---", ...warningLines]),
         "--- stdout ---",
         result.stdout.trim(),
         "--- stderr ---",
@@ -147,12 +153,4 @@ function run(command, args, cwd) {
     stdout: result.stdout,
     stderr: result.stderr,
   };
-}
-
-function parseJsonLines(stdout) {
-  return stdout
-    .split(/\r?\n/u)
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0)
-    .map((line) => JSON.parse(line));
 }
