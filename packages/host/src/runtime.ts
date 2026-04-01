@@ -597,12 +597,13 @@ function renderInlineHighlightedBashCall(
   theme: Pick<Theme, "fg" | "bold" | "italic" | "underline">,
 ): string | null {
   const matches = detectInlineFormatMatches(command);
-  if (matches.length === 0) {
-    return null;
-  }
-
   const lines = command.split("\n");
   const highlightedByLine = new Map<number, string>();
+  const bashHighlightedLines = highlightCodeWithRenderTheme(command, "bash");
+
+  lines.forEach((line, index) => {
+    highlightedByLine.set(index, bashHighlightedLines[index] ?? line);
+  });
 
   for (const match of matches) {
     const sourceLines = lines.slice(
@@ -637,19 +638,9 @@ function renderInlineHighlightedBashCall(
     });
   }
 
-  if (highlightedByLine.size === 0) {
-    return null;
-  }
-
   const renderedLines = lines.map((line, index) => {
-    const prefixedLine = `${index === 0 ? "$ " : ""}${line}`;
-    const highlightedLine = highlightedByLine.get(index);
-
-    if (highlightedLine !== undefined) {
-      return `${index === 0 ? "$ " : ""}${highlightedLine}`;
-    }
-
-    return theme.fg("toolTitle", theme.bold(prefixedLine));
+    const highlightedLine = highlightedByLine.get(index) ?? line;
+    return `${index === 0 ? "$ " : ""}${highlightedLine}`;
   });
 
   const timeoutSuffix = timeout

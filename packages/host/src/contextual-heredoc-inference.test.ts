@@ -95,10 +95,27 @@ const CONTROL_FLOW_UNKNOWN_GENERIC_HEREDOC_COMMAND = [
   "opaque ${still_plain}",
   "EOF",
 ].join("\n");
+const RAW_MULTILINE_BASH_COMMAND = [
+  "set -euo pipefail",
+  'printf "%s\\n" "$HOME"',
+  "if [[ -d src ]]; then",
+  '  echo "src exists"',
+  "fi",
+].join("\n");
+const ANSI_PATTERN = /\u001b\[[0-9;]*m/gu;
+const HAS_ANSI_PATTERN = /\u001b\[[0-9;]*m/u;
 const MARKER_TAG_PATTERN = /<\/?(?:fg(?::[^>]+)?|bold|italic|underline)>/gu;
 
 function stripMarkerTags(line: string): string {
   return line.replaceAll(MARKER_TAG_PATTERN, "");
+}
+
+function stripDecorations(line: string): string {
+  return stripMarkerTags(line).replaceAll(ANSI_PATTERN, "");
+}
+
+function hasAnsi(line: string): boolean {
+  return HAS_ANSI_PATTERN.test(line);
 }
 
 function findLanguageMatch(command: string, language: string) {
@@ -298,7 +315,44 @@ test("renders control-flow wrapped node --import tsx generic heredocs with TypeS
   );
 });
 
-test("keeps the plain fallback when a generic heredoc has no language context", () => {
+test("renders raw multiline Bash toolcalls as Bash even without a heredoc opener", () => {
+  const { toolDefinition } = createHostBashRuntime();
+  assert.ok(toolDefinition.renderCall);
+
+  const rendered = toolDefinition.renderCall(
+    {
+      command: RAW_MULTILINE_BASH_COMMAND,
+    },
+    markerTheme as never,
+    {
+      executionStarted: false,
+      state: {},
+    } as never,
+  ) as { render(width: number): string[] };
+  const renderedLines = rendered.render(400).map((line) => line.trimEnd());
+
+  assert.deepStrictEqual(
+    detectInlineFormatMatches(RAW_MULTILINE_BASH_COMMAND),
+    [],
+  );
+  assert.ok(
+    renderedLines.some((line) => hasAnsi(line)),
+    "expected bash syntax highlighting for a raw multiline bash toolcall",
+  );
+  assert.ok(
+    renderedLines.every((line) => !line.includes("<fg:toolTitle>")),
+    "expected bash syntax highlighting instead of the plain tool-title fallback",
+  );
+  assert.deepStrictEqual(renderedLines.map(stripDecorations), [
+    "$ set -euo pipefail",
+    'printf "%s\\n" "$HOME"',
+    "if [[ -d src ]]; then",
+    '  echo "src exists"',
+    "fi",
+  ]);
+});
+
+test("renders Bash by default when a generic heredoc has no language context", () => {
   const { toolDefinition } = createHostBashRuntime();
   assert.ok(toolDefinition.renderCall);
   assert.deepStrictEqual(
@@ -320,9 +374,19 @@ test("keeps the plain fallback when a generic heredoc has no language context", 
       state: {},
     } as never,
   ) as { render(width: number): string[] };
+  const renderedLines = rendered.render(400).map((line) => line.trimEnd());
 
-  assert.deepStrictEqual(
-    rendered.render(400).map((line) => stripMarkerTags(line.trimEnd())),
-    ["$ false || cat <<'EOF'", "opaque ${still_plain}", "EOF"],
+  assert.ok(
+    renderedLines.some((line) => hasAnsi(line)),
+    "expected bash syntax highlighting for the generic heredoc wrapper",
   );
+  assert.ok(
+    renderedLines.every((line) => !line.includes("<fg:toolTitle>")),
+    "expected bash syntax highlighting instead of the plain tool-title fallback",
+  );
+  assert.deepStrictEqual(renderedLines.map(stripDecorations), [
+    "$ false || cat <<'EOF'",
+    "opaque ${still_plain}",
+    "EOF",
+  ]);
 });
