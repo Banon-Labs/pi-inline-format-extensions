@@ -1,6 +1,6 @@
 {
-  "name": "pi-inline-format-extensions",
-  "private": true,
+  "name": "@banon-labs/pi-inline-format-extensions",
+  "private": false,
   "version": "0.1.0",
   "type": "module",
   "keywords": [
@@ -17,17 +17,44 @@
   },
   "scripts": {
     "build:pages-demo": "tsx scripts/build-pages-demo.ts",
-    "check": "npm run format && npm run typecheck && npm run check:root-package-install",
+    "check": "npm run format && npm run typecheck && npm run check:root-package-install && npm run check:npm-tarball-install",
     "check:root-package-install": "node ./scripts/check-root-package-install.mjs",
     "format": "prettier --check .",
     "format:write": "prettier --write .",
-    "typecheck": "tsc --noEmit -p tsconfig.json"
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "check:npm-tarball-install": "node ./scripts/check-npm-tarball-install.mjs"
   },
   "devDependencies": {
     "@mariozechner/pi-coding-agent": "^0.63.1",
     "@types/node": "^25.5.0",
     "prettier": "^3.8.1",
     "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  },
+  "description": "Host/plugin Pi package for inline heredoc formatting and semantic inspection.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Banon-Labs/pi-inline-format-extensions.git"
+  },
+  "homepage": "https://github.com/Banon-Labs/pi-inline-format-extensions#readme",
+  "bugs": {
+    "url": "https://github.com/Banon-Labs/pi-inline-format-extensions/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "README.md",
+    "packages/"
+  ],
+  "dependencies": {
+    "@pi-inline-format/bash": "file:packages/bash",
+    "@pi-inline-format/host": "file:packages/host",
+    "@pi-inline-format/intel": "file:packages/intel",
+    "@pi-inline-format/javascript": "file:packages/javascript",
+    "@pi-inline-format/python": "file:packages/python",
+    "@pi-inline-format/shared-contract": "file:packages/shared-contract",
+    "@pi-inline-format/typescript": "file:packages/typescript",
     "typescript": "^5.9.3"
   }
 }
