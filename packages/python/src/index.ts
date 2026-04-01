@@ -5,9 +5,10 @@ import {
   type InlineFormatSemanticToken,
   type InlineFormatVirtualDocument,
 } from "@pi-inline-format/intel";
-import type {
-  InlineFormatMatch,
-  InlineFormatPlugin,
+import {
+  findInlineFormatHeredocRange,
+  type InlineFormatMatch,
+  type InlineFormatPlugin,
 } from "@pi-inline-format/shared-contract";
 
 export const PYTHON_HEREDOC_MARKERS = ["<<'PY'", '<<"PY"', "<<PY"] as const;
@@ -59,29 +60,30 @@ export function createPythonSemanticTokensRenderEntrypointReference<TResult>(
   return { render };
 }
 
+const PYTHON_HEREDOC_COMMAND_PATTERN = /^\s*python(?:3)?(?:\s|$)/u;
+
 export function findPythonHeredocRange(command: string): {
   startLineIndex: number;
   endLineIndex: number;
 } | null {
-  const lines = command.split("\n");
-  const startLineIndex = lines.findIndex((line) =>
-    PYTHON_HEREDOC_MARKERS.some((marker) => line.includes(marker)),
-  );
+  const explicitRange = findInlineFormatHeredocRange(command, {
+    terminator: PYTHON_HEREDOC_TERMINATOR,
+  });
 
-  if (startLineIndex === -1) {
+  if (explicitRange !== null) {
+    return explicitRange;
+  }
+
+  const genericRange = findInlineFormatHeredocRange(command);
+
+  if (
+    genericRange === null ||
+    !PYTHON_HEREDOC_COMMAND_PATTERN.test(genericRange.openerLine)
+  ) {
     return null;
   }
 
-  const endLineIndex = lines.findIndex(
-    (line, index) =>
-      index > startLineIndex && line === PYTHON_HEREDOC_TERMINATOR,
-  );
-
-  if (endLineIndex <= startLineIndex + 1) {
-    return null;
-  }
-
-  return { startLineIndex, endLineIndex };
+  return genericRange;
 }
 
 export function extractPythonHeredocSource(command: string): string | null {

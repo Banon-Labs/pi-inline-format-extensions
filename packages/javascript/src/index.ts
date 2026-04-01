@@ -1,34 +1,36 @@
-import type {
-  InlineFormatMatch,
-  InlineFormatPlugin,
+import {
+  findInlineFormatHeredocRange,
+  type InlineFormatMatch,
+  type InlineFormatPlugin,
 } from "@pi-inline-format/shared-contract";
 
 export const JAVASCRIPT_HEREDOC_MARKERS = ["<<'JS'", '<<"JS"', "<<JS"] as const;
 export const JAVASCRIPT_HEREDOC_TERMINATOR = "JS";
 
+const JAVASCRIPT_HEREDOC_COMMAND_PATTERN = /^\s*node(?:\s|$)/u;
+
 export function findJavaScriptHeredocRange(command: string): {
   startLineIndex: number;
   endLineIndex: number;
 } | null {
-  const lines = command.split("\n");
-  const startLineIndex = lines.findIndex((line) =>
-    JAVASCRIPT_HEREDOC_MARKERS.some((marker) => line.includes(marker)),
-  );
+  const explicitRange = findInlineFormatHeredocRange(command, {
+    terminator: JAVASCRIPT_HEREDOC_TERMINATOR,
+  });
 
-  if (startLineIndex === -1) {
+  if (explicitRange !== null) {
+    return explicitRange;
+  }
+
+  const genericRange = findInlineFormatHeredocRange(command);
+
+  if (
+    genericRange === null ||
+    !JAVASCRIPT_HEREDOC_COMMAND_PATTERN.test(genericRange.openerLine)
+  ) {
     return null;
   }
 
-  const endLineIndex = lines.findIndex(
-    (line, index) =>
-      index > startLineIndex && line === JAVASCRIPT_HEREDOC_TERMINATOR,
-  );
-
-  if (endLineIndex <= startLineIndex + 1) {
-    return null;
-  }
-
-  return { startLineIndex, endLineIndex };
+  return genericRange;
 }
 
 function detectJavaScriptHeredoc(command: string): InlineFormatMatch | null {

@@ -1,34 +1,36 @@
-import type {
-  InlineFormatMatch,
-  InlineFormatPlugin,
+import {
+  findInlineFormatHeredocRange,
+  type InlineFormatMatch,
+  type InlineFormatPlugin,
 } from "@pi-inline-format/shared-contract";
 
 export const TYPESCRIPT_HEREDOC_MARKERS = ["<<'TS'", '<<"TS"', "<<TS"] as const;
 export const TYPESCRIPT_HEREDOC_TERMINATOR = "TS";
 
+const TYPESCRIPT_HEREDOC_COMMAND_PATTERN = /^\s*(?:npx\s+tsx|tsx)(?:\s|$)/u;
+
 export function findTypeScriptHeredocRange(command: string): {
   startLineIndex: number;
   endLineIndex: number;
 } | null {
-  const lines = command.split("\n");
-  const startLineIndex = lines.findIndex((line) =>
-    TYPESCRIPT_HEREDOC_MARKERS.some((marker) => line.includes(marker)),
-  );
+  const explicitRange = findInlineFormatHeredocRange(command, {
+    terminator: TYPESCRIPT_HEREDOC_TERMINATOR,
+  });
 
-  if (startLineIndex === -1) {
+  if (explicitRange !== null) {
+    return explicitRange;
+  }
+
+  const genericRange = findInlineFormatHeredocRange(command);
+
+  if (
+    genericRange === null ||
+    !TYPESCRIPT_HEREDOC_COMMAND_PATTERN.test(genericRange.openerLine)
+  ) {
     return null;
   }
 
-  const endLineIndex = lines.findIndex(
-    (line, index) =>
-      index > startLineIndex && line === TYPESCRIPT_HEREDOC_TERMINATOR,
-  );
-
-  if (endLineIndex <= startLineIndex + 1) {
-    return null;
-  }
-
-  return { startLineIndex, endLineIndex };
+  return genericRange;
 }
 
 function detectTypeScriptHeredoc(command: string): InlineFormatMatch | null {
