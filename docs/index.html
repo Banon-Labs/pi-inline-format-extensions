@@ -248,21 +248,22 @@
     <main>
       <div class="eyebrow">GitHub Pages demo surface</div>
       <h1>
-        Actual ANSI captures from Pi for standard and verbose inline-format
-        examples across all four shipped languages
+        Actual ANSI captures from Pi for explicit-marker basics, generic EOF
+        basics, and verbose inline-format examples across all four shipped
+        languages
       </h1>
       <p class="lead">
         This page is built from actual ANSI captures of Pi rendering
         deterministic shipped samples for Python, JavaScript, TypeScript, and
-        Bash. Each language includes the current standard example plus a longer
-        verbose variant selectable from a dropdown. It remains a demo surface
-        only: authoritative proof stays in repo-local regressions, validation
-        runs, and tmux smoke evidence.
+        Bash. Each language includes a basic explicit-marker example, a basic
+        generic-EOF example, and a longer verbose variant selectable from a
+        dropdown. It remains a demo surface only: authoritative proof stays in
+        repo-local regressions, validation runs, and tmux smoke evidence.
       </p>
       <div class="badge-row">
         <div class="badge">Actual ANSI capture</div>
         <div class="badge">4 shipped languages</div>
-        <div class="badge">2 variants per language</div>
+        <div class="badge">3 variants per language</div>
         <div class="badge">Presentation, not proof</div>
       </div>
 
@@ -286,20 +287,21 @@
                 <label class="variant-picker">
                   <span>Example</span>
                   <select data-variant-select>
-                    <option value="standard">Standard</option>
+                    <option value="standard">Explicit basic</option>
+                    <option value="eof">EOF basic</option>
                     <option value="verbose">Verbose</option>
                   </select>
                 </label>
               </div>
               <section class="variant-panel is-active" data-variant="standard">
                 <div class="variant-meta">
-                  <strong>Standard example</strong>
+                  <strong>Explicit marker example</strong>
                   <span
                     >actual ANSI capture from Pi · source: repo sample +
                     deterministic compare path</span
                   >
                 </div>
-                <pre> Use bash to run python from a heredoc with python3. Keep the transcript inline and normal.
+                <pre> Use bash to run python from a heredoc with python3. Use PY as the heredoc delimiter exactly. Keep the transcript inline and normal.
 
 
 <span style="background-color:rgb(40, 50, 40)">
@@ -314,6 +316,32 @@
  </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">PY</span><span style="background-color:rgb(40, 50, 40)">
 
  </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">hello from py</span><span style="background-color:rgb(40, 50, 40)">
+
+ </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">Took 0.1s</span><span style="background-color:rgb(40, 50, 40)"></span></pre>
+              </section>
+              <section class="variant-panel" data-variant="eof" hidden="hidden">
+                <div class="variant-meta">
+                  <strong>EOF basic example</strong>
+                  <span
+                    >actual ANSI capture from Pi · source: repo sample +
+                    deterministic compare path</span
+                  >
+                </div>
+                <pre> Use bash to run python from a heredoc with python3. Use EOF as the heredoc delimiter exactly. Keep the transcript inline and normal.
+
+
+<span style="background-color:rgb(40, 50, 40)">
+ </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">$ python3 &lt;&lt;'EOF'</span><span style="background-color:rgb(40, 50, 40)">
+ </span><span style="color:rgb(106, 153, 85);background-color:rgb(40, 50, 40)">#!/usr/bin/env python3</span><span style="background-color:rgb(40, 50, 40)">
+
+ </span><span style="color:rgb(86, 156, 214);background-color:rgb(40, 50, 40)">def</span><span style="background-color:rgb(40, 50, 40)"> </span><span style="color:rgb(220, 220, 170);background-color:rgb(40, 50, 40)">main</span><span style="background-color:rgb(40, 50, 40)">() -&gt; </span><span style="color:rgb(181, 206, 168);background-color:rgb(40, 50, 40)">None</span><span style="background-color:rgb(40, 50, 40)">:
+     </span><span style="color:rgb(78, 201, 176);background-color:rgb(40, 50, 40)">print</span><span style="background-color:rgb(40, 50, 40)">(</span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">&quot;hello from py&quot;</span><span style="background-color:rgb(40, 50, 40)">, </span><span style="color:rgb(181, 206, 168);background-color:rgb(40, 50, 40)">42</span><span style="background-color:rgb(40, 50, 40)">)
+
+ </span><span style="color:rgb(86, 156, 214);background-color:rgb(40, 50, 40)">if</span><span style="background-color:rgb(40, 50, 40)"> __name__ == </span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">&quot;__main__&quot;</span><span style="background-color:rgb(40, 50, 40)">:
+     main()
+ </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">EOF</span><span style="background-color:rgb(40, 50, 40)">
+
+ </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">hello from py 42</span><span style="background-color:rgb(40, 50, 40)">
 
  </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">Took 0.1s</span><span style="background-color:rgb(40, 50, 40)"></span></pre>
               </section>
@@ -550,20 +578,21 @@
                 <label class="variant-picker">
                   <span>Example</span>
                   <select data-variant-select>
-                    <option value="standard">Standard</option>
+                    <option value="standard">Explicit basic</option>
+                    <option value="eof">EOF basic</option>
                     <option value="verbose">Verbose</option>
                   </select>
                 </label>
               </div>
               <section class="variant-panel is-active" data-variant="standard">
                 <div class="variant-meta">
-                  <strong>Standard example</strong>
+                  <strong>Explicit marker example</strong>
                   <span
                     >actual ANSI capture from Pi · source: repo sample +
                     deterministic compare path</span
                   >
                 </div>
-                <pre> Use bash to run javascript from a heredoc with node. Keep the transcript inline and normal.
+                <pre> Use bash to run javascript from a heredoc with node. Use JS as the heredoc delimiter exactly. Keep the transcript inline and normal.
 
 
 <span style="background-color:rgb(40, 50, 40)">
@@ -574,7 +603,28 @@
 
  </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">hello from js 42</span><span style="background-color:rgb(40, 50, 40)">
 
- </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">Took 1.2s</span><span style="background-color:rgb(40, 50, 40)"></span></pre>
+ </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">Took 1.1s</span><span style="background-color:rgb(40, 50, 40)"></span></pre>
+              </section>
+              <section class="variant-panel" data-variant="eof" hidden="hidden">
+                <div class="variant-meta">
+                  <strong>EOF basic example</strong>
+                  <span
+                    >actual ANSI capture from Pi · source: repo sample +
+                    deterministic compare path</span
+                  >
+                </div>
+                <pre> Use bash to run javascript from a heredoc with node. Use EOF as the heredoc delimiter exactly. Keep the transcript inline and normal.
+
+
+<span style="background-color:rgb(40, 50, 40)">
+ </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">$ node &lt;&lt;'EOF'</span><span style="background-color:rgb(40, 50, 40)">
+ </span><span style="color:rgb(86, 156, 214);background-color:rgb(40, 50, 40)">const</span><span style="background-color:rgb(40, 50, 40)"> </span><span style="font-weight:700;text-decoration:underline;background-color:rgb(40, 50, 40)"></span><span style="font-weight:700;text-decoration:underline;color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">value</span><span style="background-color:rgb(40, 50, 40)"> = </span><span style="color:rgb(181, 206, 168);background-color:rgb(40, 50, 40)">42</span><span style="background-color:rgb(40, 50, 40)">;
+ </span><span style="font-style:italic;background-color:rgb(40, 50, 40)"></span><span style="font-style:italic;color:rgb(78, 201, 176);background-color:rgb(40, 50, 40)">console</span><span style="background-color:rgb(40, 50, 40)">.</span><span style="font-style:italic;background-color:rgb(40, 50, 40)"></span><span style="font-style:italic;color:rgb(220, 220, 170);background-color:rgb(40, 50, 40)">log</span><span style="background-color:rgb(40, 50, 40)">(</span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">&quot;hello from js&quot;</span><span style="background-color:rgb(40, 50, 40)">, </span><span style="text-decoration:underline;background-color:rgb(40, 50, 40)"></span><span style="text-decoration:underline;color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">value</span><span style="background-color:rgb(40, 50, 40)">);
+ </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">EOF</span><span style="background-color:rgb(40, 50, 40)">
+
+ </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">hello from js 42</span><span style="background-color:rgb(40, 50, 40)">
+
+ </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">Took 1.1s</span><span style="background-color:rgb(40, 50, 40)"></span></pre>
               </section>
               <section
                 class="variant-panel"
@@ -698,7 +748,7 @@
 
  </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">hello from verbose js verbose-js:52 double|4|true|25|4|true switch-hit:done 0,1 raw\n42</span><span style="background-color:rgb(40, 50, 40)">
 
- </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">Took 1.4s</span><span style="background-color:rgb(40, 50, 40)"></span></pre>
+ </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">Took 1.3s</span><span style="background-color:rgb(40, 50, 40)"></span></pre>
               </section>
             </section>
             <section class="example" data-language="typescript">
@@ -710,20 +760,21 @@
                 <label class="variant-picker">
                   <span>Example</span>
                   <select data-variant-select>
-                    <option value="standard">Standard</option>
+                    <option value="standard">Explicit basic</option>
+                    <option value="eof">EOF basic</option>
                     <option value="verbose">Verbose</option>
                   </select>
                 </label>
               </div>
               <section class="variant-panel is-active" data-variant="standard">
                 <div class="variant-meta">
-                  <strong>Standard example</strong>
+                  <strong>Explicit marker example</strong>
                   <span
                     >actual ANSI capture from Pi · source: repo sample +
                     deterministic compare path</span
                   >
                 </div>
-                <pre> Use bash to run typescript from a heredoc with npx tsx. Keep the transcript inline and normal.
+                <pre> Use bash to run typescript from a heredoc with npx tsx. Use TS as the heredoc delimiter exactly. Keep the transcript inline and normal.
 
 
 <span style="background-color:rgb(40, 50, 40)">
@@ -738,7 +789,32 @@
 
  </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">hello from ts 42</span><span style="background-color:rgb(40, 50, 40)">
 
- </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">Took 1.3s</span><span style="background-color:rgb(40, 50, 40)"></span></pre>
+ </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">Took 1.1s</span><span style="background-color:rgb(40, 50, 40)"></span></pre>
+              </section>
+              <section class="variant-panel" data-variant="eof" hidden="hidden">
+                <div class="variant-meta">
+                  <strong>EOF basic example</strong>
+                  <span
+                    >actual ANSI capture from Pi · source: repo sample +
+                    deterministic compare path</span
+                  >
+                </div>
+                <pre> Use bash to run typescript from a heredoc with npx tsx. Use EOF as the heredoc delimiter exactly. Keep the transcript inline and normal.
+
+
+<span style="background-color:rgb(40, 50, 40)">
+ </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">$ npx tsx &lt;&lt;'EOF'</span><span style="background-color:rgb(40, 50, 40)">
+ </span><span style="color:rgb(86, 156, 214);background-color:rgb(40, 50, 40)">type</span><span style="background-color:rgb(40, 50, 40)"> </span><span style="font-weight:700;background-color:rgb(40, 50, 40)"></span><span style="font-weight:700;color:rgb(78, 201, 176);background-color:rgb(40, 50, 40)">Answer</span><span style="background-color:rgb(40, 50, 40)"> = {
+   </span><span style="font-weight:700;background-color:rgb(40, 50, 40)"></span><span style="font-weight:700;color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">value</span><span style="background-color:rgb(40, 50, 40)">: </span><span style="color:rgb(78, 201, 176);background-color:rgb(40, 50, 40)">number</span><span style="background-color:rgb(40, 50, 40)">;
+ };
+
+ </span><span style="color:rgb(86, 156, 214);background-color:rgb(40, 50, 40)">const</span><span style="background-color:rgb(40, 50, 40)"> </span><span style="font-weight:700;text-decoration:underline;background-color:rgb(40, 50, 40)"></span><span style="font-weight:700;text-decoration:underline;color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">answer</span><span style="background-color:rgb(40, 50, 40)">: </span><span style="color:rgb(78, 201, 176);background-color:rgb(40, 50, 40)">Answer</span><span style="background-color:rgb(40, 50, 40)"> = { </span><span style="font-weight:700;background-color:rgb(40, 50, 40)"></span><span style="font-weight:700;color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">value</span><span style="background-color:rgb(40, 50, 40)">: </span><span style="color:rgb(181, 206, 168);background-color:rgb(40, 50, 40)">42</span><span style="background-color:rgb(40, 50, 40)"> };
+ </span><span style="font-style:italic;background-color:rgb(40, 50, 40)"></span><span style="font-style:italic;color:rgb(78, 201, 176);background-color:rgb(40, 50, 40)">console</span><span style="background-color:rgb(40, 50, 40)">.</span><span style="font-style:italic;background-color:rgb(40, 50, 40)"></span><span style="font-style:italic;color:rgb(220, 220, 170);background-color:rgb(40, 50, 40)">log</span><span style="background-color:rgb(40, 50, 40)">(</span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">&quot;hello from ts&quot;</span><span style="background-color:rgb(40, 50, 40)">, </span><span style="text-decoration:underline;background-color:rgb(40, 50, 40)"></span><span style="text-decoration:underline;color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">answer</span><span style="background-color:rgb(40, 50, 40)">.</span><span style="color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">value</span><span style="background-color:rgb(40, 50, 40)">);
+ </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">EOF</span><span style="background-color:rgb(40, 50, 40)">
+
+ </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">hello from ts 42</span><span style="background-color:rgb(40, 50, 40)">
+
+ </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">Took 1.1s</span><span style="background-color:rgb(40, 50, 40)"></span></pre>
               </section>
               <section
                 class="variant-panel"
@@ -863,7 +939,7 @@
 
  </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">hello from verbose ts verbose-ts:compile 4276993946 true alpha alpha onSave 42.00|OK|/docs alpha:waiting,beta:active,gamma:complete</span><span style="background-color:rgb(40, 50, 40)">
 
- </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">Took 1.5s</span><span style="background-color:rgb(40, 50, 40)"></span></pre>
+ </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">Took 1.3s</span><span style="background-color:rgb(40, 50, 40)"></span></pre>
               </section>
             </section>
             <section class="example" data-language="bash">
@@ -875,20 +951,21 @@
                 <label class="variant-picker">
                   <span>Example</span>
                   <select data-variant-select>
-                    <option value="standard">Standard</option>
+                    <option value="standard">Explicit basic</option>
+                    <option value="eof">EOF basic</option>
                     <option value="verbose">Verbose</option>
                   </select>
                 </label>
               </div>
               <section class="variant-panel is-active" data-variant="standard">
                 <div class="variant-meta">
-                  <strong>Standard example</strong>
+                  <strong>Explicit marker example</strong>
                   <span
                     >actual ANSI capture from Pi · source: repo sample +
                     deterministic compare path</span
                   >
                 </div>
-                <pre> Use bash to run shell from a heredoc with bash. Keep the transcript inline and normal.
+                <pre> Use bash to run shell from a heredoc with bash. Use SH as the heredoc delimiter exactly. Keep the transcript inline and normal.
 
 
 <span style="background-color:rgb(40, 50, 40)">
@@ -896,6 +973,27 @@
  </span><span style="font-style:italic;background-color:rgb(40, 50, 40)"></span><span style="font-style:italic;color:rgb(78, 201, 176);background-color:rgb(40, 50, 40)">set</span><span style="background-color:rgb(40, 50, 40)"> -euo pipefail
  </span><span style="font-style:italic;background-color:rgb(40, 50, 40)"></span><span style="font-style:italic;color:rgb(78, 201, 176);background-color:rgb(40, 50, 40)">echo</span><span style="background-color:rgb(40, 50, 40)"> </span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">&quot;hello from sh&quot;</span><span style="background-color:rgb(40, 50, 40)">
  </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">SH</span><span style="background-color:rgb(40, 50, 40)">
+
+ </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">hello from sh</span><span style="background-color:rgb(40, 50, 40)">
+
+ </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">Took 0.0s</span><span style="background-color:rgb(40, 50, 40)"></span></pre>
+              </section>
+              <section class="variant-panel" data-variant="eof" hidden="hidden">
+                <div class="variant-meta">
+                  <strong>EOF basic example</strong>
+                  <span
+                    >actual ANSI capture from Pi · source: repo sample +
+                    deterministic compare path</span
+                  >
+                </div>
+                <pre> Use bash to run shell from a heredoc with bash. Use EOF as the heredoc delimiter exactly. Keep the transcript inline and normal.
+
+
+<span style="background-color:rgb(40, 50, 40)">
+ </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">$ bash &lt;&lt;'EOF'</span><span style="background-color:rgb(40, 50, 40)">
+ </span><span style="font-style:italic;background-color:rgb(40, 50, 40)"></span><span style="font-style:italic;color:rgb(78, 201, 176);background-color:rgb(40, 50, 40)">set</span><span style="background-color:rgb(40, 50, 40)"> -euo pipefail
+ </span><span style="font-style:italic;background-color:rgb(40, 50, 40)"></span><span style="font-style:italic;color:rgb(78, 201, 176);background-color:rgb(40, 50, 40)">echo</span><span style="background-color:rgb(40, 50, 40)"> </span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">&quot;hello from sh&quot;</span><span style="background-color:rgb(40, 50, 40)">
+ </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">EOF</span><span style="background-color:rgb(40, 50, 40)">
 
  </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">hello from sh</span><span style="background-color:rgb(40, 50, 40)">
 
@@ -1002,7 +1100,7 @@
               >,
               <a
                 href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/src/demo-samples.ts"
-                >standard + verbose sample source definitions</a
+                >explicit + EOF + verbose sample source definitions</a
               >,
               <a
                 href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/src/runtime.ts"
@@ -1044,16 +1142,16 @@
                 >scripts/build-pages-demo.ts</a
               >
               — launches Pi in tmux, captures ANSI output, groups
-              standard/verbose variants, and converts SGR styling into HTML
-              spans
+              explicit-marker/EOF/verbose variants, and converts SGR styling
+              into HTML spans
             </li>
             <li>
               <a
                 href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/src/demo-samples.ts"
                 >packages/host/src/demo-samples.ts</a
               >
-              — repo-grounded standard and verbose examples for Python,
-              JavaScript, TypeScript, and Bash
+              — repo-grounded explicit-marker, generic-EOF, and verbose examples
+              for Python, JavaScript, TypeScript, and Bash
             </li>
             <li>
               <a

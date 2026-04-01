@@ -3,6 +3,8 @@ import { writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import prettier from "prettier";
+
 import {
   DEMO_LANGUAGE_ORDER,
   DEMO_SAMPLE_VARIANTS,
@@ -37,6 +39,10 @@ function captureScenario(scenario: DemoSample): string {
   const cmd = [
     "pi",
     "--offline",
+    "--no-extensions",
+    "--no-skills",
+    "--no-prompt-templates",
+    "--no-themes",
     "--extension",
     "./packages/host/extensions/index.ts",
     "--model",
@@ -265,10 +271,11 @@ const capturesByLanguage = Object.fromEntries(
 function renderLanguageCard(language: DemoLanguage): string {
   const variants = capturesByLanguage[language];
   const label = variants.standard.label;
+  const defaultVariant: DemoVariant = "standard";
   const panels = DEMO_VARIANT_ORDER.map((variant) => {
     const sample = variants[variant];
-    const hidden = variant === "standard" ? "" : ' hidden="hidden"';
-    return `<section class="variant-panel${variant === "standard" ? " is-active" : ""}" data-variant="${variant}"${hidden}>
+    const hidden = variant === defaultVariant ? "" : ' hidden="hidden"';
+    return `<section class="variant-panel${variant === defaultVariant ? " is-active" : ""}" data-variant="${variant}"${hidden}>
       <div class="variant-meta">
         <strong>${sample.variantLabel} example</strong>
         <span>actual ANSI capture from Pi · source: repo sample + deterministic compare path</span>
@@ -286,7 +293,8 @@ function renderLanguageCard(language: DemoLanguage): string {
       <label class="variant-picker">
         <span>Example</span>
         <select data-variant-select>
-          <option value="standard">Standard</option>
+          <option value="standard">Explicit basic</option>
+          <option value="eof">EOF basic</option>
           <option value="verbose">Verbose</option>
         </select>
       </label>
@@ -478,14 +486,14 @@ const html = `<!doctype html>
   <body>
     <main>
       <div class="eyebrow">GitHub Pages demo surface</div>
-      <h1>Actual ANSI captures from Pi for standard and verbose inline-format examples across all four shipped languages</h1>
+      <h1>Actual ANSI captures from Pi for explicit-marker basics, generic EOF basics, and verbose inline-format examples across all four shipped languages</h1>
       <p class="lead">
-        This page is built from actual ANSI captures of Pi rendering deterministic shipped samples for Python, JavaScript, TypeScript, and Bash. Each language includes the current standard example plus a longer verbose variant selectable from a dropdown. It remains a demo surface only: authoritative proof stays in repo-local regressions, validation runs, and tmux smoke evidence.
+        This page is built from actual ANSI captures of Pi rendering deterministic shipped samples for Python, JavaScript, TypeScript, and Bash. Each language includes a basic explicit-marker example, a basic generic-EOF example, and a longer verbose variant selectable from a dropdown. It remains a demo surface only: authoritative proof stays in repo-local regressions, validation runs, and tmux smoke evidence.
       </p>
       <div class="badge-row">
         <div class="badge">Actual ANSI capture</div>
         <div class="badge">4 shipped languages</div>
-        <div class="badge">2 variants per language</div>
+        <div class="badge">3 variants per language</div>
         <div class="badge">Presentation, not proof</div>
       </div>
 
@@ -505,7 +513,7 @@ const html = `<!doctype html>
             Caption: every transcript variant above is derived from an actual ANSI capture collected from Pi running in tmux; the outer page frame is presentation chrome, not a literal full-screen Pi screenshot. Method sources:
             <span class="pi-caption-links">
               <a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/scripts/build-pages-demo.ts">capture + ANSI-to-HTML generator</a>,
-              <a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/src/demo-samples.ts">standard + verbose sample source definitions</a>,
+              <a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/src/demo-samples.ts">explicit + EOF + verbose sample source definitions</a>,
               <a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/src/runtime.ts">deterministic scenario registration</a>,
               <a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/extensions/index.ts">extension sample command usage</a>,
               <a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/.github/workflows/pages.yml">Pages publish workflow</a>
@@ -528,8 +536,8 @@ const html = `<!doctype html>
         <article class="card">
           <h2>Capture generation sources</h2>
           <ul>
-            <li><a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/scripts/build-pages-demo.ts">scripts/build-pages-demo.ts</a> — launches Pi in tmux, captures ANSI output, groups standard/verbose variants, and converts SGR styling into HTML spans</li>
-            <li><a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/src/demo-samples.ts">packages/host/src/demo-samples.ts</a> — repo-grounded standard and verbose examples for Python, JavaScript, TypeScript, and Bash</li>
+            <li><a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/scripts/build-pages-demo.ts">scripts/build-pages-demo.ts</a> — launches Pi in tmux, captures ANSI output, groups explicit-marker/EOF/verbose variants, and converts SGR styling into HTML spans</li>
+            <li><a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/src/demo-samples.ts">packages/host/src/demo-samples.ts</a> — repo-grounded explicit-marker, generic-EOF, and verbose examples for Python, JavaScript, TypeScript, and Bash</li>
             <li><a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/src/runtime.ts">packages/host/src/runtime.ts</a> — deterministic compare registration for the page capture models</li>
             <li><a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/.github/workflows/pages.yml">.github/workflows/pages.yml</a> — GitHub Pages publish path</li>
           </ul>
@@ -564,4 +572,5 @@ const html = `<!doctype html>
   </body>
 </html>`;
 
-writeFileSync(path.join(repoRoot, "docs/index.html"), html);
+const formattedHtml = await prettier.format(html, { parser: "html" });
+writeFileSync(path.join(repoRoot, "docs/index.html"), formattedHtml);

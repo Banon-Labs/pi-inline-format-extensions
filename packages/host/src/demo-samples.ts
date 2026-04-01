@@ -1,13 +1,17 @@
 export type DemoLanguage = "python" | "javascript" | "typescript" | "bash";
-export type DemoVariant = "standard" | "verbose";
+export type DemoVariant = "standard" | "eof" | "verbose";
 export type DemoScenarioKey =
   | "python"
+  | "python-eof"
   | "python-verbose"
   | "javascript"
+  | "javascript-eof"
   | "javascript-verbose"
   | "typescript"
+  | "typescript-eof"
   | "typescript-verbose"
   | "bash"
+  | "bash-eof"
   | "bash-verbose";
 
 export interface DemoSample {
@@ -36,6 +40,18 @@ export const STANDARD_PYTHON_SAMPLE_COMMAND = joinLines([
   'if __name__ == "__main__":',
   "    main()",
   "PY",
+]);
+
+export const EOF_PYTHON_SAMPLE_COMMAND = joinLines([
+  "python3 <<'EOF'",
+  "#!/usr/bin/env python3",
+  "",
+  "def main() -> None:",
+  '    print("hello from py", 42)',
+  "",
+  'if __name__ == "__main__":',
+  "    main()",
+  "EOF",
 ]);
 
 export const VERBOSE_PYTHON_SAMPLE_COMMAND = joinLines([
@@ -250,6 +266,13 @@ export const STANDARD_JAVASCRIPT_SAMPLE_COMMAND = joinLines([
   "JS",
 ]);
 
+export const EOF_JAVASCRIPT_SAMPLE_COMMAND = joinLines([
+  "node <<'EOF'",
+  "const value = 42;",
+  'console.log("hello from js", value);',
+  "EOF",
+]);
+
 export const VERBOSE_JAVASCRIPT_SAMPLE_COMMAND = joinLines([
   "node <<'JS'",
   "#!/usr/bin/env node",
@@ -367,6 +390,17 @@ export const STANDARD_TYPESCRIPT_SAMPLE_COMMAND = joinLines([
   "TS",
 ]);
 
+export const EOF_TYPESCRIPT_SAMPLE_COMMAND = joinLines([
+  "npx tsx <<'EOF'",
+  "type Answer = {",
+  "  value: number;",
+  "};",
+  "",
+  "const answer: Answer = { value: 42 };",
+  'console.log("hello from ts", answer.value);',
+  "EOF",
+]);
+
 export const VERBOSE_TYPESCRIPT_SAMPLE_COMMAND = joinLines([
   "npx tsx <<'TS'",
   "#!/usr/bin/env -S npx tsx",
@@ -481,6 +515,13 @@ export const STANDARD_BASH_SAMPLE_COMMAND = joinLines([
   "SH",
 ]);
 
+export const EOF_BASH_SAMPLE_COMMAND = joinLines([
+  "bash <<'EOF'",
+  "set -euo pipefail",
+  'echo "hello from sh"',
+  "EOF",
+]);
+
 export const VERBOSE_BASH_SAMPLE_COMMAND = joinLines([
   "bash <<'SH'",
   "#!/usr/bin/env bash",
@@ -552,12 +593,24 @@ export const DEMO_SAMPLE_VARIANTS = {
       language: "python",
       variant: "standard",
       label: "Python",
-      variantLabel: "Standard",
+      variantLabel: "Explicit marker",
       model: "canonical-heredoc-compare",
       prompt:
-        "Use bash to run python from a heredoc with python3. Keep the transcript inline and normal.",
+        "Use bash to run python from a heredoc with python3. Use PY as the heredoc delimiter exactly. Keep the transcript inline and normal.",
       toolCallId: "call_inline_format_deterministic_python_bash",
       bashCommand: STANDARD_PYTHON_SAMPLE_COMMAND,
+    },
+    eof: {
+      key: "python-eof",
+      language: "python",
+      variant: "eof",
+      label: "Python",
+      variantLabel: "EOF basic",
+      model: "python-heredoc-eof-compare",
+      prompt:
+        "Use bash to run python from a heredoc with python3. Use EOF as the heredoc delimiter exactly. Keep the transcript inline and normal.",
+      toolCallId: "call_inline_format_deterministic_python_eof_bash",
+      bashCommand: EOF_PYTHON_SAMPLE_COMMAND,
     },
     verbose: {
       key: "python-verbose",
@@ -578,12 +631,24 @@ export const DEMO_SAMPLE_VARIANTS = {
       language: "javascript",
       variant: "standard",
       label: "JavaScript",
-      variantLabel: "Standard",
+      variantLabel: "Explicit marker",
       model: "javascript-heredoc-compare",
       prompt:
-        "Use bash to run javascript from a heredoc with node. Keep the transcript inline and normal.",
+        "Use bash to run javascript from a heredoc with node. Use JS as the heredoc delimiter exactly. Keep the transcript inline and normal.",
       toolCallId: "call_inline_format_deterministic_javascript_bash",
       bashCommand: STANDARD_JAVASCRIPT_SAMPLE_COMMAND,
+    },
+    eof: {
+      key: "javascript-eof",
+      language: "javascript",
+      variant: "eof",
+      label: "JavaScript",
+      variantLabel: "EOF basic",
+      model: "javascript-heredoc-eof-compare",
+      prompt:
+        "Use bash to run javascript from a heredoc with node. Use EOF as the heredoc delimiter exactly. Keep the transcript inline and normal.",
+      toolCallId: "call_inline_format_deterministic_javascript_eof_bash",
+      bashCommand: EOF_JAVASCRIPT_SAMPLE_COMMAND,
     },
     verbose: {
       key: "javascript-verbose",
@@ -604,12 +669,24 @@ export const DEMO_SAMPLE_VARIANTS = {
       language: "typescript",
       variant: "standard",
       label: "TypeScript",
-      variantLabel: "Standard",
+      variantLabel: "Explicit marker",
       model: "typescript-heredoc-compare",
       prompt:
-        "Use bash to run typescript from a heredoc with npx tsx. Keep the transcript inline and normal.",
+        "Use bash to run typescript from a heredoc with npx tsx. Use TS as the heredoc delimiter exactly. Keep the transcript inline and normal.",
       toolCallId: "call_inline_format_deterministic_typescript_bash",
       bashCommand: STANDARD_TYPESCRIPT_SAMPLE_COMMAND,
+    },
+    eof: {
+      key: "typescript-eof",
+      language: "typescript",
+      variant: "eof",
+      label: "TypeScript",
+      variantLabel: "EOF basic",
+      model: "typescript-heredoc-eof-compare",
+      prompt:
+        "Use bash to run typescript from a heredoc with npx tsx. Use EOF as the heredoc delimiter exactly. Keep the transcript inline and normal.",
+      toolCallId: "call_inline_format_deterministic_typescript_eof_bash",
+      bashCommand: EOF_TYPESCRIPT_SAMPLE_COMMAND,
     },
     verbose: {
       key: "typescript-verbose",
@@ -630,12 +707,24 @@ export const DEMO_SAMPLE_VARIANTS = {
       language: "bash",
       variant: "standard",
       label: "Bash",
-      variantLabel: "Standard",
+      variantLabel: "Explicit marker",
       model: "bash-heredoc-compare",
       prompt:
-        "Use bash to run shell from a heredoc with bash. Keep the transcript inline and normal.",
+        "Use bash to run shell from a heredoc with bash. Use SH as the heredoc delimiter exactly. Keep the transcript inline and normal.",
       toolCallId: "call_inline_format_deterministic_bash_bash",
       bashCommand: STANDARD_BASH_SAMPLE_COMMAND,
+    },
+    eof: {
+      key: "bash-eof",
+      language: "bash",
+      variant: "eof",
+      label: "Bash",
+      variantLabel: "EOF basic",
+      model: "bash-heredoc-eof-compare",
+      prompt:
+        "Use bash to run shell from a heredoc with bash. Use EOF as the heredoc delimiter exactly. Keep the transcript inline and normal.",
+      toolCallId: "call_inline_format_deterministic_bash_eof_bash",
+      bashCommand: EOF_BASH_SAMPLE_COMMAND,
     },
     verbose: {
       key: "bash-verbose",
@@ -661,6 +750,7 @@ export const DEMO_LANGUAGE_ORDER = [
 
 export const DEMO_VARIANT_ORDER = [
   "standard",
+  "eof",
   "verbose",
 ] as const satisfies readonly DemoVariant[];
 
@@ -676,4 +766,11 @@ export const STANDARD_SAMPLE_COMMANDS = {
   javascript: STANDARD_JAVASCRIPT_SAMPLE_COMMAND,
   typescript: STANDARD_TYPESCRIPT_SAMPLE_COMMAND,
   bash: STANDARD_BASH_SAMPLE_COMMAND,
+} as const;
+
+export const EOF_SAMPLE_COMMANDS = {
+  python: EOF_PYTHON_SAMPLE_COMMAND,
+  javascript: EOF_JAVASCRIPT_SAMPLE_COMMAND,
+  typescript: EOF_TYPESCRIPT_SAMPLE_COMMAND,
+  bash: EOF_BASH_SAMPLE_COMMAND,
 } as const;
