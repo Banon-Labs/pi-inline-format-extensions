@@ -22,6 +22,14 @@ const scenarios = DEMO_LANGUAGE_ORDER.flatMap((language) =>
   DEMO_VARIANT_ORDER.map((variant) => DEMO_SAMPLE_VARIANTS[language][variant]),
 );
 
+const RAW_BASH_PROOF_COMMAND = [
+  "set -euo pipefail",
+  'printf "%s\\n" "$HOME"',
+  "if [[ -d src ]]; then",
+  '  echo "src exists"',
+  "fi",
+].join("\n");
+
 function run(command: string): string {
   return execSync(command, {
     cwd: repoRoot,
@@ -66,6 +74,68 @@ function captureScenario(scenario: DemoSample): string {
       // ignore cleanup failures
     }
   }
+}
+
+function captureRawBashProof(): string {
+  const session = `pi-pages-raw-bash-${process.pid}-${Date.now()}`;
+  const cmd = [
+    "pi",
+    "--offline",
+    "--no-session",
+    "--no-extensions",
+    "--no-skills",
+    "--no-prompt-templates",
+    "--no-themes",
+    "--extension",
+    "./packages/host/extensions/index.ts",
+  ].join(" ");
+
+  run(
+    `tmux new-session -d -s ${shellEscape(session)} -c ${shellEscape(repoRoot)} ${shellEscape(cmd)}`,
+  );
+  try {
+    execSync("sleep 8");
+    const paneId = run(
+      `tmux list-panes -t ${shellEscape(session)} -F '#{pane_id}'`,
+    ).trim();
+    run(
+      `tmux send-keys -t ${shellEscape(paneId)} -l ${shellEscape(`!${RAW_BASH_PROOF_COMMAND}`)}`,
+    );
+    run(`tmux send-keys -t ${shellEscape(paneId)} Enter`);
+    execSync("sleep 6");
+    return run(`tmux capture-pane -p -e -S -260 -t ${shellEscape(paneId)}`);
+  } finally {
+    try {
+      run(`tmux kill-session -t ${shellEscape(session)}`);
+    } catch {
+      // ignore cleanup failures
+    }
+  }
+}
+
+function extractRawBashBody(capture: string): string {
+  const anchor = "$ set -euo pipefail";
+  const startIndex = capture.indexOf(anchor);
+  if (startIndex < 0) {
+    throw new Error(`Raw bash proof anchor not found in capture: ${anchor}`);
+  }
+
+  const regionStart = capture.lastIndexOf("\n", startIndex - 1);
+  const tookIndex = capture.indexOf("Took ", startIndex);
+  if (tookIndex >= 0) {
+    const regionEnd = capture.indexOf("\n", tookIndex);
+    return capture.slice(regionStart + 1, regionEnd).trimEnd();
+  }
+
+  const separatorIndex = capture.indexOf("────────────────", startIndex);
+  if (separatorIndex < 0) {
+    throw new Error(
+      'Neither a "Took" line nor a trailing separator was found for the raw bash proof capture',
+    );
+  }
+
+  const regionEnd = capture.lastIndexOf("\n", separatorIndex - 1);
+  return capture.slice(regionStart + 1, regionEnd).trimEnd();
 }
 
 function extractBody(capture: string, prompt: string): string {
@@ -253,6 +323,11 @@ const captures = scenarios.map((scenario) => ({
   body: ansiToHtml(extractBody(captureScenario(scenario), scenario.prompt)),
 }));
 
+const rawBashProof = {
+  title: "Raw multiline Bash tool call (no heredoc)",
+  body: ansiToHtml(extractRawBashBody(captureRawBashProof())),
+};
+
 const capturesByLanguage = Object.fromEntries(
   DEMO_LANGUAGE_ORDER.map((language) => [
     language,
@@ -304,6 +379,20 @@ function renderLanguageCard(language: DemoLanguage): string {
 }
 
 const cards = DEMO_LANGUAGE_ORDER.map(renderLanguageCard).join("\n");
+
+const rawBashFeature = `<section class="card raw-bash-proof">
+  <div class="example-header">
+    <div class="example-title">
+      <strong>${rawBashProof.title}</strong>
+      <span>actual ANSI capture from Pi · interactive ! bash path · no heredoc opener</span>
+    </div>
+  </div>
+  <div class="variant-meta">
+    <strong>Why it matters</strong>
+    <span>The command body has no heredoc opener, but the tool row still renders it as Bash by default.</span>
+  </div>
+  <pre>${rawBashProof.body}</pre>
+</section>`;
 
 const html = `<!doctype html>
 <html lang="en">
@@ -402,6 +491,9 @@ const html = `<!doctype html>
         border-radius: 16px;
         overflow: hidden;
       }
+      .raw-bash-proof {
+        margin-bottom: 16px;
+      }
       .example-header {
         display: flex;
         justify-content: space-between;
@@ -486,14 +578,15 @@ const html = `<!doctype html>
   <body>
     <main>
       <div class="eyebrow">GitHub Pages demo surface</div>
-      <h1>Actual ANSI captures from Pi for explicit-marker basics, generic EOF basics, and verbose inline-format examples across all four shipped languages</h1>
+      <h1>Actual ANSI captures from Pi for explicit-marker basics, generic EOF basics, verbose inline-format examples, and a raw multiline Bash tool call proof across all four shipped languages</h1>
       <p class="lead">
-        This page is built from actual ANSI captures of Pi rendering deterministic shipped samples for Python, JavaScript, TypeScript, and Bash. Each language includes a basic explicit-marker example, a basic generic-EOF example, and a longer verbose variant selectable from a dropdown. It remains a demo surface only: authoritative proof stays in repo-local regressions, validation runs, and tmux smoke evidence.
+        This page is built from actual ANSI captures of Pi rendering deterministic shipped samples for Python, JavaScript, TypeScript, and Bash, plus a dedicated raw multiline Bash proof that uses no heredoc opener at all. Each language includes a basic explicit-marker example, a basic generic-EOF example, and a longer verbose variant selectable from a dropdown, while the extra Bash panel shows the newer default-Bash highlighting path directly. It remains a demo surface only: authoritative proof stays in repo-local regressions, validation runs, and tmux smoke evidence.
       </p>
       <div class="badge-row">
         <div class="badge">Actual ANSI capture</div>
         <div class="badge">4 shipped languages</div>
         <div class="badge">3 variants per language</div>
+        <div class="badge">Raw Bash no-heredoc proof</div>
         <div class="badge">Presentation, not proof</div>
       </div>
 
@@ -504,13 +597,14 @@ const html = `<!doctype html>
           <div>repo: Banon-Labs/pi-inline-format-extensions</div>
         </div>
         <div class="pi-body">
+          ${rawBashFeature}
           <div class="examples">
             ${cards}
           </div>
         </div>
         <div class="pi-caption">
           <p>
-            Caption: every transcript variant above is derived from an actual ANSI capture collected from Pi running in tmux; the outer page frame is presentation chrome, not a literal full-screen Pi screenshot. Method sources:
+            Caption: every transcript variant above — including the raw multiline Bash proof with no heredoc opener — is derived from an actual ANSI capture collected from Pi running in tmux; the outer page frame is presentation chrome, not a literal full-screen Pi screenshot. Method sources:
             <span class="pi-caption-links">
               <a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/scripts/build-pages-demo.ts">capture + ANSI-to-HTML generator</a>,
               <a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/src/demo-samples.ts">explicit + EOF + verbose sample source definitions</a>,
@@ -530,13 +624,13 @@ const html = `<!doctype html>
         <article class="card">
           <h2>Trust boundary</h2>
           <p>
-            These panels are derived from real deterministic Pi captures rather than handwritten mock snippets. GitHub Pages is still not the proof surface; it is only a readable presentation layer over proof that already exists elsewhere in the repo and bd comments.
+            These panels are derived from real Pi ANSI captures rather than handwritten mock snippets. The language grid comes from deterministic compare flows, and the extra raw Bash panel comes from Pi's interactive ! bash path to prove the no-heredoc default-highlighting behavior directly. GitHub Pages is still not the proof surface; it is only a readable presentation layer over proof that already exists elsewhere in the repo and bd comments.
           </p>
         </article>
         <article class="card">
           <h2>Capture generation sources</h2>
           <ul>
-            <li><a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/scripts/build-pages-demo.ts">scripts/build-pages-demo.ts</a> — launches Pi in tmux, captures ANSI output, groups explicit-marker/EOF/verbose variants, and converts SGR styling into HTML spans</li>
+            <li><a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/scripts/build-pages-demo.ts">scripts/build-pages-demo.ts</a> — launches Pi in tmux, captures ANSI output for the explicit-marker/EOF/verbose grids plus the raw multiline Bash proof, and converts SGR styling into HTML spans</li>
             <li><a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/src/demo-samples.ts">packages/host/src/demo-samples.ts</a> — repo-grounded explicit-marker, generic-EOF, and verbose examples for Python, JavaScript, TypeScript, and Bash</li>
             <li><a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/packages/host/src/runtime.ts">packages/host/src/runtime.ts</a> — deterministic compare registration for the page capture models</li>
             <li><a href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/.github/workflows/pages.yml">.github/workflows/pages.yml</a> — GitHub Pages publish path</li>

@@ -141,6 +141,9 @@
         border-radius: 16px;
         overflow: hidden;
       }
+      .raw-bash-proof {
+        margin-bottom: 16px;
+      }
       .example-header {
         display: flex;
         justify-content: space-between;
@@ -249,21 +252,25 @@
       <div class="eyebrow">GitHub Pages demo surface</div>
       <h1>
         Actual ANSI captures from Pi for explicit-marker basics, generic EOF
-        basics, and verbose inline-format examples across all four shipped
-        languages
+        basics, verbose inline-format examples, and a raw multiline Bash tool
+        call proof across all four shipped languages
       </h1>
       <p class="lead">
         This page is built from actual ANSI captures of Pi rendering
         deterministic shipped samples for Python, JavaScript, TypeScript, and
-        Bash. Each language includes a basic explicit-marker example, a basic
-        generic-EOF example, and a longer verbose variant selectable from a
-        dropdown. It remains a demo surface only: authoritative proof stays in
-        repo-local regressions, validation runs, and tmux smoke evidence.
+        Bash, plus a dedicated raw multiline Bash proof that uses no heredoc
+        opener at all. Each language includes a basic explicit-marker example, a
+        basic generic-EOF example, and a longer verbose variant selectable from
+        a dropdown, while the extra Bash panel shows the newer default-Bash
+        highlighting path directly. It remains a demo surface only:
+        authoritative proof stays in repo-local regressions, validation runs,
+        and tmux smoke evidence.
       </p>
       <div class="badge-row">
         <div class="badge">Actual ANSI capture</div>
         <div class="badge">4 shipped languages</div>
         <div class="badge">3 variants per language</div>
+        <div class="badge">Raw Bash no-heredoc proof</div>
         <div class="badge">Presentation, not proof</div>
       </div>
 
@@ -277,6 +284,31 @@
           <div>repo: Banon-Labs/pi-inline-format-extensions</div>
         </div>
         <div class="pi-body">
+          <section class="card raw-bash-proof">
+            <div class="example-header">
+              <div class="example-title">
+                <strong>Raw multiline Bash tool call (no heredoc)</strong>
+                <span
+                  >actual ANSI capture from Pi · interactive ! bash path · no
+                  heredoc opener</span
+                >
+              </div>
+            </div>
+            <div class="variant-meta">
+              <strong>Why it matters</strong>
+              <span
+                >The command body has no heredoc opener, but the tool row still
+                renders it as Bash by default.</span
+              >
+            </div>
+            <pre> <span style="font-weight:700"></span><span style="font-weight:700;color:rgb(181, 189, 104)">$ set -euo pipefail</span><span style="color:rgb(181, 189, 104)">
+</span> <span style="font-weight:700"></span><span style="font-weight:700;color:rgb(181, 189, 104)">printf &quot;%s\n&quot; &quot;$HOME&quot;</span><span style="color:rgb(181, 189, 104)">
+</span> <span style="font-weight:700"></span><span style="font-weight:700;color:rgb(181, 189, 104)">if [[ -d src ]]; then</span><span style="color:rgb(181, 189, 104)">
+</span> <span style="font-weight:700"></span><span style="font-weight:700;color:rgb(181, 189, 104)">  echo &quot;src exists&quot;</span><span style="color:rgb(181, 189, 104)">
+</span> <span style="font-weight:700"></span><span style="font-weight:700;color:rgb(181, 189, 104)">fi</span>
+
+ <span style="color:rgb(128, 128, 128)">/home/choza</span></pre>
+          </section>
           <div class="examples">
             <section class="example" data-language="python">
               <div class="example-header">
@@ -305,7 +337,7 @@
 
 
 <span style="background-color:rgb(40, 50, 40)">
- </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">$ python3 &lt;&lt;'PY'</span><span style="background-color:rgb(40, 50, 40)">
+ $ python3 &lt;&lt;</span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">'PY'</span><span style="background-color:rgb(40, 50, 40)">
  </span><span style="color:rgb(106, 153, 85);background-color:rgb(40, 50, 40)">#!/usr/bin/env python3</span><span style="background-color:rgb(40, 50, 40)">
 
  </span><span style="color:rgb(86, 156, 214);background-color:rgb(40, 50, 40)">def</span><span style="background-color:rgb(40, 50, 40)"> </span><span style="font-weight:700;background-color:rgb(40, 50, 40)"></span><span style="font-weight:700;color:rgb(220, 220, 170);background-color:rgb(40, 50, 40)">main</span><span style="background-color:rgb(40, 50, 40)">() -&gt; </span><span style="color:rgb(181, 206, 168);background-color:rgb(40, 50, 40)">None</span><span style="background-color:rgb(40, 50, 40)">:
@@ -313,7 +345,7 @@
 
  </span><span style="color:rgb(86, 156, 214);background-color:rgb(40, 50, 40)">if</span><span style="background-color:rgb(40, 50, 40)"> __name__ == </span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">&quot;__main__&quot;</span><span style="background-color:rgb(40, 50, 40)">:
      main()
- </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">PY</span><span style="background-color:rgb(40, 50, 40)">
+ PY
 
  </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">hello from py</span><span style="background-color:rgb(40, 50, 40)">
 
@@ -331,7 +363,7 @@
 
 
 <span style="background-color:rgb(40, 50, 40)">
- </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">$ python3 &lt;&lt;'EOF'</span><span style="background-color:rgb(40, 50, 40)">
+ $ python3 &lt;&lt;</span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">'EOF'</span><span style="background-color:rgb(40, 50, 40)">
  </span><span style="color:rgb(106, 153, 85);background-color:rgb(40, 50, 40)">#!/usr/bin/env python3</span><span style="background-color:rgb(40, 50, 40)">
 
  </span><span style="color:rgb(86, 156, 214);background-color:rgb(40, 50, 40)">def</span><span style="background-color:rgb(40, 50, 40)"> </span><span style="color:rgb(220, 220, 170);background-color:rgb(40, 50, 40)">main</span><span style="background-color:rgb(40, 50, 40)">() -&gt; </span><span style="color:rgb(181, 206, 168);background-color:rgb(40, 50, 40)">None</span><span style="background-color:rgb(40, 50, 40)">:
@@ -339,7 +371,7 @@
 
  </span><span style="color:rgb(86, 156, 214);background-color:rgb(40, 50, 40)">if</span><span style="background-color:rgb(40, 50, 40)"> __name__ == </span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">&quot;__main__&quot;</span><span style="background-color:rgb(40, 50, 40)">:
      main()
- </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">EOF</span><span style="background-color:rgb(40, 50, 40)">
+ EOF
 
  </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">hello from py 42</span><span style="background-color:rgb(40, 50, 40)">
 
@@ -361,7 +393,7 @@
 
 
 <span style="background-color:rgb(40, 50, 40)">
- </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">$ python3 &lt;&lt;'PY'</span><span style="background-color:rgb(40, 50, 40)">
+ $ python3 &lt;&lt;</span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">'PY'</span><span style="background-color:rgb(40, 50, 40)">
  </span><span style="color:rgb(106, 153, 85);background-color:rgb(40, 50, 40)">#!/usr/bin/env python3</span><span style="background-color:rgb(40, 50, 40)">
  </span><span style="color:rgb(106, 153, 85);background-color:rgb(40, 50, 40)"># -*- coding: utf-8 -*-</span><span style="background-color:rgb(40, 50, 40)">
  </span><span style="color:rgb(106, 153, 85);background-color:rgb(40, 50, 40)"># Single-line comment</span><span style="background-color:rgb(40, 50, 40)">
@@ -562,7 +594,7 @@
 
  </span><span style="color:rgb(86, 156, 214);background-color:rgb(40, 50, 40)">if</span><span style="background-color:rgb(40, 50, 40)"> __name__ == </span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">&quot;__main__&quot;</span><span style="background-color:rgb(40, 50, 40)">:
      main()
- </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">PY</span><span style="background-color:rgb(40, 50, 40)">
+ PY
 
  </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">hello from verbose py 84 True quit x</span><span style="background-color:rgb(40, 50, 40)">
 
@@ -596,14 +628,14 @@
 
 
 <span style="background-color:rgb(40, 50, 40)">
- </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">$ node &lt;&lt;'JS'</span><span style="background-color:rgb(40, 50, 40)">
+ $ node &lt;&lt;</span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">'JS'</span><span style="background-color:rgb(40, 50, 40)">
  </span><span style="color:rgb(86, 156, 214);background-color:rgb(40, 50, 40)">const</span><span style="background-color:rgb(40, 50, 40)"> </span><span style="font-weight:700;text-decoration:underline;background-color:rgb(40, 50, 40)"></span><span style="font-weight:700;text-decoration:underline;color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">value</span><span style="background-color:rgb(40, 50, 40)"> = </span><span style="color:rgb(181, 206, 168);background-color:rgb(40, 50, 40)">42</span><span style="background-color:rgb(40, 50, 40)">;
  </span><span style="font-style:italic;background-color:rgb(40, 50, 40)"></span><span style="font-style:italic;color:rgb(78, 201, 176);background-color:rgb(40, 50, 40)">console</span><span style="background-color:rgb(40, 50, 40)">.</span><span style="font-style:italic;background-color:rgb(40, 50, 40)"></span><span style="font-style:italic;color:rgb(220, 220, 170);background-color:rgb(40, 50, 40)">log</span><span style="background-color:rgb(40, 50, 40)">(</span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">&quot;hello from js&quot;</span><span style="background-color:rgb(40, 50, 40)">, </span><span style="text-decoration:underline;background-color:rgb(40, 50, 40)"></span><span style="text-decoration:underline;color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">value</span><span style="background-color:rgb(40, 50, 40)">);
- </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">JS</span><span style="background-color:rgb(40, 50, 40)">
+ JS
 
  </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">hello from js 42</span><span style="background-color:rgb(40, 50, 40)">
 
- </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">Took 1.1s</span><span style="background-color:rgb(40, 50, 40)"></span></pre>
+ </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">Took 1.2s</span><span style="background-color:rgb(40, 50, 40)"></span></pre>
               </section>
               <section class="variant-panel" data-variant="eof" hidden="hidden">
                 <div class="variant-meta">
@@ -617,10 +649,10 @@
 
 
 <span style="background-color:rgb(40, 50, 40)">
- </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">$ node &lt;&lt;'EOF'</span><span style="background-color:rgb(40, 50, 40)">
+ $ node &lt;&lt;</span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">'EOF'</span><span style="background-color:rgb(40, 50, 40)">
  </span><span style="color:rgb(86, 156, 214);background-color:rgb(40, 50, 40)">const</span><span style="background-color:rgb(40, 50, 40)"> </span><span style="font-weight:700;text-decoration:underline;background-color:rgb(40, 50, 40)"></span><span style="font-weight:700;text-decoration:underline;color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">value</span><span style="background-color:rgb(40, 50, 40)"> = </span><span style="color:rgb(181, 206, 168);background-color:rgb(40, 50, 40)">42</span><span style="background-color:rgb(40, 50, 40)">;
  </span><span style="font-style:italic;background-color:rgb(40, 50, 40)"></span><span style="font-style:italic;color:rgb(78, 201, 176);background-color:rgb(40, 50, 40)">console</span><span style="background-color:rgb(40, 50, 40)">.</span><span style="font-style:italic;background-color:rgb(40, 50, 40)"></span><span style="font-style:italic;color:rgb(220, 220, 170);background-color:rgb(40, 50, 40)">log</span><span style="background-color:rgb(40, 50, 40)">(</span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">&quot;hello from js&quot;</span><span style="background-color:rgb(40, 50, 40)">, </span><span style="text-decoration:underline;background-color:rgb(40, 50, 40)"></span><span style="text-decoration:underline;color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">value</span><span style="background-color:rgb(40, 50, 40)">);
- </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">EOF</span><span style="background-color:rgb(40, 50, 40)">
+ EOF
 
  </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">hello from js 42</span><span style="background-color:rgb(40, 50, 40)">
 
@@ -642,7 +674,7 @@
 
 
 <span style="background-color:rgb(40, 50, 40)">
- </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">$ node &lt;&lt;'JS'</span><span style="background-color:rgb(40, 50, 40)">
+ $ node &lt;&lt;</span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">'JS'</span><span style="background-color:rgb(40, 50, 40)">
  </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">#!/usr/bin/env node</span><span style="background-color:rgb(40, 50, 40)">
  </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">'use strict'</span><span style="background-color:rgb(40, 50, 40)">;
  </span><span style="color:rgb(106, 153, 85);background-color:rgb(40, 50, 40)">// Single-line comment</span><span style="background-color:rgb(40, 50, 40)">
@@ -744,7 +776,7 @@
    </span><span style="color:rgb(86, 156, 214);background-color:rgb(40, 50, 40)">const</span><span style="background-color:rgb(40, 50, 40)"> </span><span style="font-weight:700;text-decoration:underline;background-color:rgb(40, 50, 40)"></span><span style="font-weight:700;text-decoration:underline;color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">summary</span><span style="background-color:rgb(40, 50, 40)"> = [</span><span style="text-decoration:underline;background-color:rgb(40, 50, 40)"></span><span style="text-decoration:underline;color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">alias</span><span style="background-color:rgb(40, 50, 40)">, </span><span style="text-decoration:underline;background-color:rgb(40, 50, 40)"></span><span style="text-decoration:underline;color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">optional</span><span style="background-color:rgb(40, 50, 40)">, </span><span style="text-decoration:underline;background-color:rgb(40, 50, 40)"></span><span style="text-decoration:underline;color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">truthy</span><span style="background-color:rgb(40, 50, 40)">, </span><span style="text-decoration:underline;background-color:rgb(40, 50, 40)"></span><span style="text-decoration:underline;color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">numbers</span><span style="background-color:rgb(40, 50, 40)">.</span><span style="font-style:italic;background-color:rgb(40, 50, 40)"></span><span style="font-style:italic;color:rgb(220, 220, 170);background-color:rgb(40, 50, 40)">at</span><span style="background-color:rgb(40, 50, 40)">(-</span><span style="color:rgb(181, 206, 168);background-color:rgb(40, 50, 40)">1</span><span style="background-color:rgb(40, 50, 40)">), </span><span style="text-decoration:underline;background-color:rgb(40, 50, 40)"></span><span style="text-decoration:underline;color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">nested</span><span style="background-color:rgb(40, 50, 40)">.</span><span style="font-style:italic;background-color:rgb(40, 50, 40)"></span><span style="font-style:italic;color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">length</span><span style="background-color:rgb(40, 50, 40)">, </span><span style="text-decoration:underline;background-color:rgb(40, 50, 40)"></span><span style="text-decoration:underline;color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">big</span><span style="background-color:rgb(40, 50, 40)"> &gt; </span><span style="color:rgb(181, 206, 168);background-color:rgb(40, 50, 40)">0n</span><span style="background-color:rgb(40, 50, 40)">].</span><span style="font-style:italic;background-color:rgb(40, 50, 40)"></span><span style="font-style:italic;color:rgb(220, 220, 170);background-color:rgb(40, 50, 40)">join</span><span style="background-color:rgb(40, 50, 40)">(</span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">'|'</span><span style="background-color:rgb(40, 50, 40)">);
    </span><span style="font-style:italic;background-color:rgb(40, 50, 40)"></span><span style="font-style:italic;color:rgb(78, 201, 176);background-color:rgb(40, 50, 40)">console</span><span style="background-color:rgb(40, 50, 40)">.</span><span style="font-style:italic;background-color:rgb(40, 50, 40)"></span><span style="font-style:italic;color:rgb(220, 220, 170);background-color:rgb(40, 50, 40)">log</span><span style="background-color:rgb(40, 50, 40)">(</span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">'hello from verbose js'</span><span style="background-color:rgb(40, 50, 40)">, </span><span style="text-decoration:underline;background-color:rgb(40, 50, 40)"></span><span style="text-decoration:underline;color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">instance</span><span style="background-color:rgb(40, 50, 40)">.</span><span style="color:rgb(220, 220, 170);background-color:rgb(40, 50, 40)">method</span><span style="background-color:rgb(40, 50, 40)">(</span><span style="text-decoration:underline;background-color:rgb(40, 50, 40)"></span><span style="text-decoration:underline;color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">decimal</span><span style="background-color:rgb(40, 50, 40)">), </span><span style="text-decoration:underline;background-color:rgb(40, 50, 40)"></span><span style="text-decoration:underline;color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">summary</span><span style="background-color:rgb(40, 50, 40)">, </span><span style="color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">mode</span><span style="background-color:rgb(40, 50, 40)">, </span><span style="text-decoration:underline;background-color:rgb(40, 50, 40)"></span><span style="text-decoration:underline;color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">asyncValues</span><span style="background-color:rgb(40, 50, 40)">.</span><span style="font-style:italic;background-color:rgb(40, 50, 40)"></span><span style="font-style:italic;color:rgb(220, 220, 170);background-color:rgb(40, 50, 40)">join</span><span style="background-color:rgb(40, 50, 40)">(</span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">','</span><span style="background-color:rgb(40, 50, 40)">), </span><span style="text-decoration:underline;background-color:rgb(40, 50, 40)"></span><span style="text-decoration:underline;color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">tagged</span><span style="background-color:rgb(40, 50, 40)">);
  })();
- </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">JS</span><span style="background-color:rgb(40, 50, 40)">
+ JS
 
  </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">hello from verbose js verbose-js:52 double|4|true|25|4|true switch-hit:done 0,1 raw\n42</span><span style="background-color:rgb(40, 50, 40)">
 
@@ -778,18 +810,18 @@
 
 
 <span style="background-color:rgb(40, 50, 40)">
- </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">$ npx tsx &lt;&lt;'TS'</span><span style="background-color:rgb(40, 50, 40)">
+ $ npx tsx &lt;&lt;</span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">'TS'</span><span style="background-color:rgb(40, 50, 40)">
  </span><span style="color:rgb(86, 156, 214);background-color:rgb(40, 50, 40)">type</span><span style="background-color:rgb(40, 50, 40)"> </span><span style="font-weight:700;background-color:rgb(40, 50, 40)"></span><span style="font-weight:700;color:rgb(78, 201, 176);background-color:rgb(40, 50, 40)">Answer</span><span style="background-color:rgb(40, 50, 40)"> = {
    </span><span style="font-weight:700;background-color:rgb(40, 50, 40)"></span><span style="font-weight:700;color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">value</span><span style="background-color:rgb(40, 50, 40)">: </span><span style="color:rgb(78, 201, 176);background-color:rgb(40, 50, 40)">number</span><span style="background-color:rgb(40, 50, 40)">;
  };
 
  </span><span style="color:rgb(86, 156, 214);background-color:rgb(40, 50, 40)">const</span><span style="background-color:rgb(40, 50, 40)"> </span><span style="font-weight:700;text-decoration:underline;background-color:rgb(40, 50, 40)"></span><span style="font-weight:700;text-decoration:underline;color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">answer</span><span style="background-color:rgb(40, 50, 40)">: </span><span style="color:rgb(78, 201, 176);background-color:rgb(40, 50, 40)">Answer</span><span style="background-color:rgb(40, 50, 40)"> = { </span><span style="font-weight:700;background-color:rgb(40, 50, 40)"></span><span style="font-weight:700;color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">value</span><span style="background-color:rgb(40, 50, 40)">: </span><span style="color:rgb(181, 206, 168);background-color:rgb(40, 50, 40)">42</span><span style="background-color:rgb(40, 50, 40)"> };
  </span><span style="font-style:italic;background-color:rgb(40, 50, 40)"></span><span style="font-style:italic;color:rgb(78, 201, 176);background-color:rgb(40, 50, 40)">console</span><span style="background-color:rgb(40, 50, 40)">.</span><span style="font-style:italic;background-color:rgb(40, 50, 40)"></span><span style="font-style:italic;color:rgb(220, 220, 170);background-color:rgb(40, 50, 40)">log</span><span style="background-color:rgb(40, 50, 40)">(</span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">&quot;hello from ts&quot;</span><span style="background-color:rgb(40, 50, 40)">, </span><span style="text-decoration:underline;background-color:rgb(40, 50, 40)"></span><span style="text-decoration:underline;color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">answer</span><span style="background-color:rgb(40, 50, 40)">.</span><span style="color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">value</span><span style="background-color:rgb(40, 50, 40)">);
- </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">TS</span><span style="background-color:rgb(40, 50, 40)">
+ TS
 
  </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">hello from ts 42</span><span style="background-color:rgb(40, 50, 40)">
 
- </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">Took 1.1s</span><span style="background-color:rgb(40, 50, 40)"></span></pre>
+ </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">Took 1.2s</span><span style="background-color:rgb(40, 50, 40)"></span></pre>
               </section>
               <section class="variant-panel" data-variant="eof" hidden="hidden">
                 <div class="variant-meta">
@@ -803,18 +835,18 @@
 
 
 <span style="background-color:rgb(40, 50, 40)">
- </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">$ npx tsx &lt;&lt;'EOF'</span><span style="background-color:rgb(40, 50, 40)">
+ $ npx tsx &lt;&lt;</span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">'EOF'</span><span style="background-color:rgb(40, 50, 40)">
  </span><span style="color:rgb(86, 156, 214);background-color:rgb(40, 50, 40)">type</span><span style="background-color:rgb(40, 50, 40)"> </span><span style="font-weight:700;background-color:rgb(40, 50, 40)"></span><span style="font-weight:700;color:rgb(78, 201, 176);background-color:rgb(40, 50, 40)">Answer</span><span style="background-color:rgb(40, 50, 40)"> = {
    </span><span style="font-weight:700;background-color:rgb(40, 50, 40)"></span><span style="font-weight:700;color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">value</span><span style="background-color:rgb(40, 50, 40)">: </span><span style="color:rgb(78, 201, 176);background-color:rgb(40, 50, 40)">number</span><span style="background-color:rgb(40, 50, 40)">;
  };
 
  </span><span style="color:rgb(86, 156, 214);background-color:rgb(40, 50, 40)">const</span><span style="background-color:rgb(40, 50, 40)"> </span><span style="font-weight:700;text-decoration:underline;background-color:rgb(40, 50, 40)"></span><span style="font-weight:700;text-decoration:underline;color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">answer</span><span style="background-color:rgb(40, 50, 40)">: </span><span style="color:rgb(78, 201, 176);background-color:rgb(40, 50, 40)">Answer</span><span style="background-color:rgb(40, 50, 40)"> = { </span><span style="font-weight:700;background-color:rgb(40, 50, 40)"></span><span style="font-weight:700;color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">value</span><span style="background-color:rgb(40, 50, 40)">: </span><span style="color:rgb(181, 206, 168);background-color:rgb(40, 50, 40)">42</span><span style="background-color:rgb(40, 50, 40)"> };
  </span><span style="font-style:italic;background-color:rgb(40, 50, 40)"></span><span style="font-style:italic;color:rgb(78, 201, 176);background-color:rgb(40, 50, 40)">console</span><span style="background-color:rgb(40, 50, 40)">.</span><span style="font-style:italic;background-color:rgb(40, 50, 40)"></span><span style="font-style:italic;color:rgb(220, 220, 170);background-color:rgb(40, 50, 40)">log</span><span style="background-color:rgb(40, 50, 40)">(</span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">&quot;hello from ts&quot;</span><span style="background-color:rgb(40, 50, 40)">, </span><span style="text-decoration:underline;background-color:rgb(40, 50, 40)"></span><span style="text-decoration:underline;color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">answer</span><span style="background-color:rgb(40, 50, 40)">.</span><span style="color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">value</span><span style="background-color:rgb(40, 50, 40)">);
- </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">EOF</span><span style="background-color:rgb(40, 50, 40)">
+ EOF
 
  </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">hello from ts 42</span><span style="background-color:rgb(40, 50, 40)">
 
- </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">Took 1.1s</span><span style="background-color:rgb(40, 50, 40)"></span></pre>
+ </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">Took 1.2s</span><span style="background-color:rgb(40, 50, 40)"></span></pre>
               </section>
               <section
                 class="variant-panel"
@@ -832,7 +864,7 @@
 
 
 <span style="background-color:rgb(40, 50, 40)">
- </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">$ npx tsx &lt;&lt;'TS'</span><span style="background-color:rgb(40, 50, 40)">
+ $ npx tsx &lt;&lt;</span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">'TS'</span><span style="background-color:rgb(40, 50, 40)">
  </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">#!/usr/bin/env -S npx tsx</span><span style="background-color:rgb(40, 50, 40)">
  </span><span style="color:rgb(106, 153, 85);background-color:rgb(40, 50, 40)">// Single-line comment</span><span style="background-color:rgb(40, 50, 40)">
 
@@ -935,11 +967,11 @@
  }
 
  </span><span style="color:rgb(78, 201, 176);background-color:rgb(40, 50, 40)">void</span><span style="background-color:rgb(40, 50, 40)"> </span><span style="color:rgb(220, 220, 170);background-color:rgb(40, 50, 40)">main</span><span style="background-color:rgb(40, 50, 40)">();
- </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">TS</span><span style="background-color:rgb(40, 50, 40)">
+ TS
 
  </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">hello from verbose ts verbose-ts:compile 4276993946 true alpha alpha onSave 42.00|OK|/docs alpha:waiting,beta:active,gamma:complete</span><span style="background-color:rgb(40, 50, 40)">
 
- </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">Took 1.3s</span><span style="background-color:rgb(40, 50, 40)"></span></pre>
+ </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">Took 1.4s</span><span style="background-color:rgb(40, 50, 40)"></span></pre>
               </section>
             </section>
             <section class="example" data-language="bash">
@@ -969,10 +1001,10 @@
 
 
 <span style="background-color:rgb(40, 50, 40)">
- </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">$ bash &lt;&lt;'SH'</span><span style="background-color:rgb(40, 50, 40)">
+ $ bash &lt;&lt;</span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">'SH'</span><span style="background-color:rgb(40, 50, 40)">
  </span><span style="font-style:italic;background-color:rgb(40, 50, 40)"></span><span style="font-style:italic;color:rgb(78, 201, 176);background-color:rgb(40, 50, 40)">set</span><span style="background-color:rgb(40, 50, 40)"> -euo pipefail
  </span><span style="font-style:italic;background-color:rgb(40, 50, 40)"></span><span style="font-style:italic;color:rgb(78, 201, 176);background-color:rgb(40, 50, 40)">echo</span><span style="background-color:rgb(40, 50, 40)"> </span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">&quot;hello from sh&quot;</span><span style="background-color:rgb(40, 50, 40)">
- </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">SH</span><span style="background-color:rgb(40, 50, 40)">
+ SH
 
  </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">hello from sh</span><span style="background-color:rgb(40, 50, 40)">
 
@@ -990,10 +1022,10 @@
 
 
 <span style="background-color:rgb(40, 50, 40)">
- </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">$ bash &lt;&lt;'EOF'</span><span style="background-color:rgb(40, 50, 40)">
+ $ bash &lt;&lt;</span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">'EOF'</span><span style="background-color:rgb(40, 50, 40)">
  </span><span style="font-style:italic;background-color:rgb(40, 50, 40)"></span><span style="font-style:italic;color:rgb(78, 201, 176);background-color:rgb(40, 50, 40)">set</span><span style="background-color:rgb(40, 50, 40)"> -euo pipefail
  </span><span style="font-style:italic;background-color:rgb(40, 50, 40)"></span><span style="font-style:italic;color:rgb(78, 201, 176);background-color:rgb(40, 50, 40)">echo</span><span style="background-color:rgb(40, 50, 40)"> </span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">&quot;hello from sh&quot;</span><span style="background-color:rgb(40, 50, 40)">
- </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">EOF</span><span style="background-color:rgb(40, 50, 40)">
+ EOF
 
  </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">hello from sh</span><span style="background-color:rgb(40, 50, 40)">
 
@@ -1015,7 +1047,7 @@
 
 
 <span style="background-color:rgb(40, 50, 40)">
- </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">$ bash &lt;&lt;'SH'</span><span style="background-color:rgb(40, 50, 40)">
+ $ bash &lt;&lt;</span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">'SH'</span><span style="background-color:rgb(40, 50, 40)">
  </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">#!/usr/bin/env bash</span><span style="background-color:rgb(40, 50, 40)">
  </span><span style="color:rgb(106, 153, 85);background-color:rgb(40, 50, 40)"># Single-line comment</span><span style="background-color:rgb(40, 50, 40)">
  </span><span style="font-style:italic;background-color:rgb(40, 50, 40)"></span><span style="font-style:italic;color:rgb(78, 201, 176);background-color:rgb(40, 50, 40)">set</span><span style="background-color:rgb(40, 50, 40)"> -euo pipefail
@@ -1075,7 +1107,7 @@
  </span><span style="color:rgb(220, 220, 170);background-color:rgb(40, 50, 40)">render_block</span><span style="background-color:rgb(40, 50, 40)"> </span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">&quot;verbose bash&quot;</span><span style="background-color:rgb(40, 50, 40)"> &gt; </span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">&quot;$</span><span style="color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">tmpfile</span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">&quot;</span><span style="background-color:rgb(40, 50, 40)">
  summary=</span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">&quot;</span><span style="color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">${heredoc_lines[0]}</span><span style="background-color:rgb(40, 50, 40)">:</span><span style="color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">${key}</span><span style="background-color:rgb(40, 50, 40)">:</span><span style="color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">${value}</span><span style="background-color:rgb(40, 50, 40)">:</span><span style="color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">${arith}</span><span style="background-color:rgb(40, 50, 40)">:</span><span style="color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">${mode}</span><span style="background-color:rgb(40, 50, 40)">:</span><span style="color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">${sum}</span><span style="background-color:rgb(40, 50, 40)">&quot;
  </span><span style="font-style:italic;background-color:rgb(40, 50, 40)"></span><span style="font-style:italic;color:rgb(78, 201, 176);background-color:rgb(40, 50, 40)">printf</span><span style="background-color:rgb(40, 50, 40)"> </span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">&quot;hello from verbose sh %s %s %s\n&quot;</span><span style="background-color:rgb(40, 50, 40)"> </span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">&quot;$</span><span style="color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">summary</span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">&quot; &quot;</span><span style="color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">${palette[accent]}</span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">&quot; &quot;</span><span style="background-color:rgb(40, 50, 40)">$(&lt;</span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">&quot;$</span><span style="color:rgb(156, 220, 254);background-color:rgb(40, 50, 40)">tmpfile</span><span style="color:rgb(206, 145, 120);background-color:rgb(40, 50, 40)">&quot;)&quot;</span><span style="background-color:rgb(40, 50, 40)">
- </span><span style="font-weight:700;background-color:rgb(40, 50, 40)">SH</span><span style="background-color:rgb(40, 50, 40)">
+ SH
 
  </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">hello from verbose sh alpha:one:1:44:cool:6 cyan == verbose bash ==</span><span style="background-color:rgb(40, 50, 40)">
  </span><span style="color:rgb(128, 128, 128);background-color:rgb(40, 50, 40)">script=bash</span><span style="background-color:rgb(40, 50, 40)">
@@ -1089,10 +1121,11 @@
         </div>
         <div class="pi-caption">
           <p>
-            Caption: every transcript variant above is derived from an actual
-            ANSI capture collected from Pi running in tmux; the outer page frame
-            is presentation chrome, not a literal full-screen Pi screenshot.
-            Method sources:
+            Caption: every transcript variant above — including the raw
+            multiline Bash proof with no heredoc opener — is derived from an
+            actual ANSI capture collected from Pi running in tmux; the outer
+            page frame is presentation chrome, not a literal full-screen Pi
+            screenshot. Method sources:
             <span class="pi-caption-links">
               <a
                 href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/scripts/build-pages-demo.ts"
@@ -1127,10 +1160,13 @@
         <article class="card">
           <h2>Trust boundary</h2>
           <p>
-            These panels are derived from real deterministic Pi captures rather
-            than handwritten mock snippets. GitHub Pages is still not the proof
-            surface; it is only a readable presentation layer over proof that
-            already exists elsewhere in the repo and bd comments.
+            These panels are derived from real Pi ANSI captures rather than
+            handwritten mock snippets. The language grid comes from
+            deterministic compare flows, and the extra raw Bash panel comes from
+            Pi's interactive ! bash path to prove the no-heredoc
+            default-highlighting behavior directly. GitHub Pages is still not
+            the proof surface; it is only a readable presentation layer over
+            proof that already exists elsewhere in the repo and bd comments.
           </p>
         </article>
         <article class="card">
@@ -1141,9 +1177,9 @@
                 href="https://github.com/Banon-Labs/pi-inline-format-extensions/blob/main/scripts/build-pages-demo.ts"
                 >scripts/build-pages-demo.ts</a
               >
-              — launches Pi in tmux, captures ANSI output, groups
-              explicit-marker/EOF/verbose variants, and converts SGR styling
-              into HTML spans
+              — launches Pi in tmux, captures ANSI output for the
+              explicit-marker/EOF/verbose grids plus the raw multiline Bash
+              proof, and converts SGR styling into HTML spans
             </li>
             <li>
               <a

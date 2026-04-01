@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 
 const PROMPT =
-  "Use bash to run python from a heredoc with python3. Keep the transcript inline and normal.";
+  "Use bash to run python from a heredoc with python3. Use PY as the heredoc delimiter exactly. Keep the transcript inline and normal.";
 const EXPECTED_RESULT_SNIPPET = "hello from py";
 const EXPECTED_COMMAND_SNIPPETS = [
   "python3 <<'PY'",
