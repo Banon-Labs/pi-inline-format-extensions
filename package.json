@@ -18,6 +18,7 @@
   "scripts": {
     "build:pages-demo": "tsx scripts/build-pages-demo.ts",
     "check": "npm run format && npm run typecheck && npm run check:root-package-install && npm run check:npm-tarball-install",
+    "check:release-readiness": "node ./scripts/check-release-readiness.mjs",
     "check:root-package-install": "node ./scripts/check-root-package-install.mjs",
     "format": "prettier --check .",
     "format:write": "prettier --write .",

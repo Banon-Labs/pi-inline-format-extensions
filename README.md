@@ -72,6 +72,7 @@ This keeps the architecture additive:
 
 - plugins detect,
 - host renders,
+
 - intel explains meaning.
 
 ## Design rule
@@ -185,6 +186,16 @@ The root surface is the durable contract. Consumers should not depend on an inte
 - Keep `id-token: write`, modern npm CLI, and provenance-enabled publish settings in place so future releases can use OIDC rather than long-lived tokens.
 - npm currently requires a package to already exist before you can attach a Trusted Publisher on npmjs.com, so the very first publish of a brand-new package still needs a one-time manual publish or a granular token with bypass-2FA enabled.
 - After that bootstrap publish exists on npm, open each package's npm access page, attach the matching GitHub Actions trusted publisher (`Banon-Labs/<repo>`, workflow file `publish-npm.yml`), and use the workflow for subsequent releases.
+
+### Hardened npm release checklist
+
+1. Run `npm run check` in `/home/choza/projects/pi-inline-format-extensions` and `/home/choza/projects/pi-inline-format`.
+2. Run `npm run check:release-readiness` here to confirm both repos still have the expected package metadata, trusted-publish workflow shape, public npm visibility, and registry-resolved versions.
+3. Keep the steady-state publish path on GitHub OIDC/trusted publishing; if a bootstrap bypass-2FA token was used earlier, remove it from `~/.npmrc` and revoke it on npm unless you intentionally want a manual emergency fallback.
+4. Bump the intended release version in both repos together, commit the changes, and create the matching release tag(s). In this workspace, any required `git push` must still be explicitly authorized by the user.
+5. Let the tag-triggered `.github/workflows/publish-npm.yml` workflow publish, or manually dispatch that same workflow when supervised release control is preferable.
+6. After publish, verify `npm view @banon-labs/pi-inline-format-extensions@<version> version` and `npm view @banon-labs/pi-inline-format@<version> version`, then run a temp-project proof with `pi install -l npm:@banon-labs/pi-inline-format@<version>` and `pi install -l npm:@banon-labs/pi-inline-format-extensions@<version>` followed by `pi list`.
+7. If package settings ever need to be recreated, reattach the npm Trusted Publisher on each package access page with `Banon-Labs/<repo>` and workflow filename `publish-npm.yml`.
 
 ### Growth rule for new language support
 
