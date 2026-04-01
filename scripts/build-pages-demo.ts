@@ -1,5 +1,6 @@
 import { execSync } from "node:child_process";
-import { writeFileSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -78,20 +79,16 @@ function captureScenario(scenario: DemoSample): string {
 
 function captureRawBashProof(): string {
   const session = `pi-pages-raw-bash-${process.pid}-${Date.now()}`;
+  const projectRoot = mkdtempSync(path.join(os.tmpdir(), "pi-pages-raw-bash-"));
   const cmd = [
     "pi",
-    "--offline",
-    "--no-session",
-    "--no-extensions",
     "--no-skills",
     "--no-prompt-templates",
     "--no-themes",
-    "--extension",
-    "./packages/host/extensions/index.ts",
   ].join(" ");
 
   run(
-    `tmux new-session -d -s ${shellEscape(session)} -c ${shellEscape(repoRoot)} ${shellEscape(cmd)}`,
+    `tmux new-session -d -s ${shellEscape(session)} -c ${shellEscape(projectRoot)} ${shellEscape(cmd)}`,
   );
   try {
     execSync("sleep 8");
@@ -102,29 +99,48 @@ function captureRawBashProof(): string {
       `tmux send-keys -t ${shellEscape(paneId)} -l ${shellEscape(`!${RAW_BASH_PROOF_COMMAND}`)}`,
     );
     run(`tmux send-keys -t ${shellEscape(paneId)} Enter`);
-    execSync("sleep 6");
-    return run(`tmux capture-pane -p -e -S -260 -t ${shellEscape(paneId)}`);
+
+    for (let attempt = 0; attempt < 15; attempt += 1) {
+      execSync("sleep 2");
+      const capture = run(
+        `tmux capture-pane -p -e -S -260 -t ${shellEscape(paneId)}`,
+      );
+
+      if (
+        capture.includes("\u001b[48;2;40;50;40m") &&
+        capture.includes("\u001b[38;2;78;201;176m") &&
+        capture.includes("Took ")
+      ) {
+        return capture;
+      }
+    }
+
+    throw new Error(
+      "Raw Bash proof capture did not include syntax-highlighted Bash output. Reinstall the released inline-format packages before rebuilding the Pages demo.",
+    );
   } finally {
     try {
       run(`tmux kill-session -t ${shellEscape(session)}`);
     } catch {
       // ignore cleanup failures
     }
+    rmSync(projectRoot, { recursive: true, force: true });
   }
 }
 
 function extractRawBashBody(capture: string): string {
-  const anchor = "$ set -euo pipefail";
-  const startIndex = capture.indexOf(anchor);
+  const rowStartMarker = "\u001b[48;2;40;50;40m";
+  const startIndex = capture.indexOf(rowStartMarker);
   if (startIndex < 0) {
-    throw new Error(`Raw bash proof anchor not found in capture: ${anchor}`);
+    throw new Error(
+      `Raw bash proof row start marker not found in capture: ${rowStartMarker}`,
+    );
   }
 
-  const regionStart = capture.lastIndexOf("\n", startIndex - 1);
   const tookIndex = capture.indexOf("Took ", startIndex);
   if (tookIndex >= 0) {
     const regionEnd = capture.indexOf("\n", tookIndex);
-    return capture.slice(regionStart + 1, regionEnd).trimEnd();
+    return capture.slice(startIndex, regionEnd).trimEnd();
   }
 
   const separatorIndex = capture.indexOf("────────────────", startIndex);
@@ -135,7 +151,7 @@ function extractRawBashBody(capture: string): string {
   }
 
   const regionEnd = capture.lastIndexOf("\n", separatorIndex - 1);
-  return capture.slice(regionStart + 1, regionEnd).trimEnd();
+  return capture.slice(startIndex, regionEnd).trimEnd();
 }
 
 function extractBody(capture: string, prompt: string): string {
