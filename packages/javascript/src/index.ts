@@ -8,6 +8,8 @@ export const JAVASCRIPT_HEREDOC_MARKERS = ["<<'JS'", '<<"JS"', "<<JS"] as const;
 export const JAVASCRIPT_HEREDOC_TERMINATOR = "JS";
 
 const JAVASCRIPT_HEREDOC_COMMAND_PATTERN = /^\s*node(?:\s|$)/u;
+const TYPESCRIPT_NODE_RUNTIME_PATTERN =
+  /^\s*node(?=.*(?:--import|--require)(?:\s+|=)tsx(?:\/(?:esm|cjs))?)(?:\s|$)/u;
 
 export function findJavaScriptHeredocRange(command: string): {
   startLineIndex: number;
@@ -25,7 +27,8 @@ export function findJavaScriptHeredocRange(command: string): {
 
   if (
     genericRange === null ||
-    !JAVASCRIPT_HEREDOC_COMMAND_PATTERN.test(genericRange.openerLine)
+    !JAVASCRIPT_HEREDOC_COMMAND_PATTERN.test(genericRange.openerLine) ||
+    TYPESCRIPT_NODE_RUNTIME_PATTERN.test(genericRange.openerLine)
   ) {
     return null;
   }
