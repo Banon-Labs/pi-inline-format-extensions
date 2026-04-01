@@ -12,32 +12,32 @@ const markerTheme = {
   underline: (text: string) => text,
 };
 
-const MULTI_PYTHON_COMMAND = [
-  "python - <<'PY'",
-  'print("first block")',
+const NESTED_BASH_PYTHON_COMMAND = [
+  "bash <<'SH'",
+  "python3 <<'PY'",
+  'print("nested")',
   "PY",
-  "python - <<'PY'",
-  'print("second block")',
-  "PY",
+  "echo done",
+  "SH",
 ].join("\n");
 const ANSI_PATTERN = /\u001b\[[0-9;]*m/gu;
 
-const matches = detectInlineFormatMatches(MULTI_PYTHON_COMMAND).filter(
-  (match) => match.language === "python",
+const matches = detectInlineFormatMatches(NESTED_BASH_PYTHON_COMMAND).filter(
+  (match) => match.language === "bash" || match.language === "python",
 );
 
 assert.deepStrictEqual(matches, [
   {
-    pluginName: "python",
-    language: "python",
+    pluginName: "bash",
+    language: "bash",
     startLineIndex: 1,
-    endLineIndex: 1,
+    endLineIndex: 4,
   },
   {
     pluginName: "python",
     language: "python",
-    startLineIndex: 4,
-    endLineIndex: 4,
+    startLineIndex: 2,
+    endLineIndex: 2,
   },
 ]);
 
@@ -46,7 +46,7 @@ assert.ok(toolDefinition.renderCall);
 
 const rendered = toolDefinition.renderCall(
   {
-    command: MULTI_PYTHON_COMMAND,
+    command: NESTED_BASH_PYTHON_COMMAND,
   },
   markerTheme as never,
   {
@@ -60,14 +60,14 @@ const renderedLines = rendered
   .map((line) => line.trimEnd().replaceAll(ANSI_PATTERN, ""));
 
 assert.deepStrictEqual(renderedLines, [
-  "$ python - <<'PY'",
-  'print("first block")',
+  "$ bash <<'SH'",
+  "python3 <<'PY'",
+  'print("nested")',
   "PY",
-  "python - <<'PY'",
-  'print("second block")',
-  "PY",
+  "echo done",
+  "SH",
 ]);
 
 console.log(
-  "Multiple inline heredoc render check passed. command=python-double-heredoc matches=2",
+  "Nested bash-to-python heredoc render check passed. command=bash-python-nested matches=2",
 );
