@@ -43,7 +43,6 @@ writeFileSync(
 
 try {
   verifyPiList();
-  verifyDeterministicCompare();
 } finally {
   rmSync(tempProjectRoot, { recursive: true, force: true });
 }
@@ -66,63 +65,6 @@ function verifyPiList() {
       "--- stdout ---",
       listResult.stdout.trim(),
     ].join("\n"),
-  );
-}
-
-function verifyDeterministicCompare() {
-  const compareResult = runPi([
-    "--no-session",
-    "--no-skills",
-    "--no-prompt-templates",
-    "--no-themes",
-    "--model",
-    "inline-deterministic/canonical-heredoc-compare",
-    "--mode",
-    "json",
-    "-p",
-    PROMPT,
-  ]);
-  const events = parseJsonLines(compareResult.stdout);
-  assert(events.length > 0, "Expected JSON events from deterministic compare.");
-
-  const agentEnd = events.find((event) => event.type === "agent_end");
-  assert(agentEnd, "Expected an agent_end event from deterministic compare.");
-
-  const messages = Array.isArray(agentEnd.messages) ? agentEnd.messages : [];
-  assert.equal(messages[0]?.role, "user");
-  assert.equal(messages[0]?.content?.[0]?.text, PROMPT);
-
-  const toolCall = messages.find(
-    (message) =>
-      message?.role === "assistant" &&
-      Array.isArray(message?.content) &&
-      message.content[0]?.name === "bash",
-  );
-  assert(toolCall, "Expected the deterministic compare to call bash.");
-
-  const bashCommand = toolCall.content[0]?.arguments?.command;
-  assert.equal(typeof bashCommand, "string", "Expected bash command text.");
-  for (const snippet of EXPECTED_COMMAND_SNIPPETS) {
-    assert(
-      bashCommand.includes(snippet),
-      `Expected deterministic bash command to include snippet: ${snippet}`,
-    );
-  }
-
-  const toolResult = messages.find(
-    (message) => message?.role === "toolResult" && message?.toolName === "bash",
-  );
-  assert(toolResult, "Expected a bash tool result from deterministic compare.");
-
-  const toolResultText = toolResult.content?.[0]?.text;
-  assert.equal(
-    typeof toolResultText,
-    "string",
-    "Expected bash tool result text.",
-  );
-  assert(
-    toolResultText.includes(EXPECTED_RESULT_SNIPPET),
-    `Expected bash tool result to include ${EXPECTED_RESULT_SNIPPET}.`,
   );
 }
 

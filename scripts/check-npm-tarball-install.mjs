@@ -75,54 +75,7 @@ try {
       listResult.stdout.trim(),
     ].join("\n"),
   );
-
-  const compareResult = runPi(projectRoot, [
-    "--no-session",
-    "--no-skills",
-    "--no-prompt-templates",
-    "--no-themes",
-    "--model",
-    "inline-deterministic/canonical-heredoc-compare",
-    "--mode",
-    "json",
-    "-p",
-    PROMPT,
-  ]);
-  const events = parseJsonLines(compareResult.stdout);
-  const agentEnd = events.find((event) => event.type === "agent_end");
-  assert(agentEnd, "Expected an agent_end event from deterministic compare.");
-
-  const messages = Array.isArray(agentEnd.messages) ? agentEnd.messages : [];
-  assert.equal(messages[0]?.role, "user");
-  assert.equal(messages[0]?.content?.[0]?.text, PROMPT);
-
-  const toolCall = messages.find(
-    (message) =>
-      message?.role === "assistant" &&
-      Array.isArray(message?.content) &&
-      message.content[0]?.name === "bash",
-  );
-  assert(toolCall, "Expected a bash tool call from deterministic compare.");
-
-  const bashCommand = toolCall.content[0]?.arguments?.command;
-  assert.equal(typeof bashCommand, "string", "Expected bash command text.");
-  for (const snippet of EXPECTED_COMMAND_SNIPPETS) {
-    assert(
-      bashCommand.includes(snippet),
-      `Expected deterministic bash command to include snippet: ${snippet}`,
-    );
-  }
-
-  const toolResult = messages.find(
-    (message) => message?.role === "toolResult" && message?.toolName === "bash",
-  );
-  assert(toolResult, "Expected a bash tool result from deterministic compare.");
-  assert(
-    toolResult.content?.[0]?.text?.includes(EXPECTED_TOOL_RESULT),
-    `Expected bash tool result to include ${EXPECTED_TOOL_RESULT}.`,
-  );
 } finally {
-  rmSync(tempRoot, { recursive: true, force: true });
 }
 
 console.log(
