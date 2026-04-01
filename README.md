@@ -163,7 +163,9 @@ To remove duplicated capability tables from `Banon-Labs/pi-inline-format` and ke
 
 ### Preferred package surfaces
 
-- **Stable consumer installs** should use a pinned git source at the repository root, for example:
+- **Stable consumer installs** should use the published npm package at the repository root, for example:
+  - `npm:@banon-labs/pi-inline-format-extensions@0.1.0`
+- **Pinned git refs** remain valid for release-candidate testing or emergency rollback when you need an exact repository commit:
   - `git:github.com/Banon-Labs/pi-inline-format-extensions@<commit-or-tag>`
 - **Unpublished local development** should use the repository root path, not `packages/host` directly:
   - `../../pi-inline-format-extensions`
