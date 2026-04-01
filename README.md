@@ -179,6 +179,13 @@ The root surface is the durable contract. Consumers should not depend on an inte
 3. Repin the consumer repo (`pi-inline-format`) to that published git ref.
 4. Rerun consumer validation there (`pi list`, `npm run check`, and any scenario-specific proof flows required by the change).
 
+### Trusted publishing steady state and bootstrap caveat
+
+- The intended long-term npm release path is GitHub Actions trusted publishing through `.github/workflows/publish-npm.yml`.
+- Keep `id-token: write`, modern npm CLI, and provenance-enabled publish settings in place so future releases can use OIDC rather than long-lived tokens.
+- npm currently requires a package to already exist before you can attach a Trusted Publisher on npmjs.com, so the very first publish of a brand-new package still needs a one-time manual publish or a granular token with bypass-2FA enabled.
+- After that bootstrap publish exists on npm, open each package's npm access page, attach the matching GitHub Actions trusted publisher (`Banon-Labs/<repo>`, workflow file `publish-npm.yml`), and use the workflow for subsequent releases.
+
 ### Growth rule for new language support
 
 When adding support for another heredoc language:

@@ -41,7 +41,8 @@
     "url": "https://github.com/Banon-Labs/pi-inline-format-extensions/issues"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "provenance": true
   },
   "files": [
     "README.md",
